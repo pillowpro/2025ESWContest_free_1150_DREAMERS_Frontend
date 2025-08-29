@@ -6,6 +6,8 @@ import { HomePage } from "./pages/HomePage";
 import { MonthlyReportPage } from "./pages/MonthlyReportPage";
 import { MyPage } from "./pages/MyPage";
 import SleepDetailPage from "./pages/SleepDetailPage";
+import ProfileEditPage from "./pages/ProfileEditPage";
+import PillowSettingsPage from "./pages/PillowSettingsPage";
 import {
   Login,
   Signup,
@@ -25,6 +27,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/report" element={<MonthlyReportPage />} />
         <Route path="/profile" element={<MyPage />} />
+        <Route path="/profile/edit" element={<ProfileEditPage />} />
+        <Route path="/pillow/settings" element={<PillowSettingsPage />} />
         <Route path="/sleep-detail/:date?" element={<SleepDetailPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

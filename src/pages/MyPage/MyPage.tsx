@@ -1,8 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
+import { Modal } from '../../components/Modal';
 
 const MyPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleProfileEdit = () => {
+    navigate('/profile/edit');
+  };
+
+  const handlePillowSettings = () => {
+    navigate('/pillow/settings');
+  };
+
+  const handleLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleDeleteAccount = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmLogout = () => {
+    // TODO: 실제 로그아웃 API 호출
+    navigate('/login');
+  };
+
+  const confirmDeleteAccount = () => {
+    // TODO: 실제 회원탈퇴 API 호출
+    navigate('/login');
+  };
+
   return (
     <Container>
       <GradientHeader>
@@ -16,17 +48,22 @@ const MyPage: React.FC = () => {
       </GradientHeader>
       
       <MenuContainer>
-        <MenuItem>
+        <MenuItem onClick={handleProfileEdit}>
           <MenuText>내 정보 수정</MenuText>
           <ArrowIcon />
         </MenuItem>
         
-        <MenuItem>
+        <MenuItem onClick={handlePillowSettings}>
+          <MenuText>내 베개 설정</MenuText>
+          <ArrowIcon />
+        </MenuItem>
+        
+        <MenuItem onClick={handleLogout}>
           <MenuText>로그아웃</MenuText>
           <ArrowIcon />
         </MenuItem>
         
-        <MenuItem>
+        <MenuItem onClick={handleDeleteAccount}>
           <MenuText $isDelete>회원 탈퇴</MenuText>
           <ArrowIcon />
         </MenuItem>
@@ -35,6 +72,27 @@ const MyPage: React.FC = () => {
       <BottomSpacing />
       
       <BottomNavigation />
+      
+      <Modal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        title="로그아웃"
+        description="정말 로그아웃하시겠어요?"
+        confirmText="로그아웃"
+        cancelText="취소"
+        onConfirm={confirmLogout}
+      />
+      
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="회원탈퇴"
+        description="탈퇴하시면 모든 데이터가 삭제되며&#10;복구할 수 없어요. 정말 탈퇴하시겠어요?"
+        confirmText="탈퇴하기"
+        cancelText="취소"
+        onConfirm={confirmDeleteAccount}
+        isDestructive={true}
+      />
     </Container>
   );
 };

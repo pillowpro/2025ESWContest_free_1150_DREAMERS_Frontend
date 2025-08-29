@@ -16,7 +16,7 @@ const DeviceRegister = () => {
 
         <DeviceImageContainer>
           <DeviceImage
-            src="https://skrr.zerotravel.kr/uploads/516295c2-d82c-4699-ae49-a4ce0e95e728-INIT 1.png"
+            src="/src/assets/image.png"
             alt="베개프로 초기화 화면"
           />
         </DeviceImageContainer>
