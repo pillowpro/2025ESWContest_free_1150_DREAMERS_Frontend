@@ -1,17 +1,39 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
-interface BottomNavigationProps {
-  activeTab: 'home' | 'report' | 'profile';
-  onTabChange: (tab: 'home' | 'report' | 'profile') => void;
-}
+const BottomNavigation: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const getActiveTab = () => {
+    if (location.pathname === '/') return 'home';
+    if (location.pathname === '/report') return 'report';
+    if (location.pathname === '/profile') return 'profile';
+    return 'home';
+  };
+  
+  const handleTabChange = (tab: 'home' | 'report' | 'profile') => {
+    switch (tab) {
+      case 'home':
+        navigate('/');
+        break;
+      case 'report':
+        navigate('/report');
+        break;
+      case 'profile':
+        navigate('/profile');
+        break;
+    }
+  };
 
-const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabChange }) => {
+  const activeTab = getActiveTab();
+
   return (
     <Container>
       <NavItem 
         $active={activeTab === 'home'} 
-        onClick={() => onTabChange('home')}
+        onClick={() => handleTabChange('home')}
         $position="home"
       >
         <HomeIcon $active={activeTab === 'home'} />
@@ -19,7 +41,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabCha
       
       <NavItem 
         $active={activeTab === 'report'} 
-        onClick={() => onTabChange('report')}
+        onClick={() => handleTabChange('report')}
         $position="report"
       >
         <ReportIcon $active={activeTab === 'report'} />
@@ -27,7 +49,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabCha
       
       <NavItem 
         $active={activeTab === 'profile'} 
-        onClick={() => onTabChange('profile')}
+        onClick={() => handleTabChange('profile')}
         $position="profile"
       >
         <ProfileIcon $active={activeTab === 'profile'} />

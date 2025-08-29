@@ -2,11 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
 
-interface HomePageProps {
-  onTabChange: (tab: 'home' | 'report' | 'profile') => void;
-}
-
-const HomePage: React.FC<HomePageProps> = ({ onTabChange }) => {
+const HomePage: React.FC = () => {
   return (
     <Container>
       <GradientHeader />
@@ -118,7 +114,7 @@ const HomePage: React.FC<HomePageProps> = ({ onTabChange }) => {
       
       <BottomSpacing />
       
-      <BottomNavigation activeTab="home" onTabChange={onTabChange} />
+      <BottomNavigation />
     </Container>
   );
 };

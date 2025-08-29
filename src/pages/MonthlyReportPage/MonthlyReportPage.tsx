@@ -1,10 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Calendar } from '../../components/Calendar';
-
-interface MonthlyReportPageProps {
-  onBack: () => void;
-}
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { Calendar } from "../../components/Calendar";
 
 // Sample data for August calendar
 const augustDays = [
@@ -14,11 +11,11 @@ const augustDays = [
   { date: 1, isEmpty: true },
   { date: 1, isEmpty: true },
   { date: 1, isEmpty: true },
-  { date: 1, color: 'blue200' as const },
-  { date: 2, color: 'blue300' as const },
+  { date: 1, color: "blue200" as const },
+  { date: 2, color: "blue300" as const },
   // Week 2
-  { date: 3, color: 'blue400' as const },
-  { date: 4, color: 'blue500' as const },
+  { date: 3, color: "blue400" as const },
+  { date: 4, color: "blue500" as const },
   { date: 5 },
   { date: 6 },
   { date: 7 },
@@ -33,10 +30,10 @@ const augustDays = [
   { date: 15 },
   { date: 16 },
   // Week 4
-  { date: 17, color: 'blue200' as const },
-  { date: 18, color: 'blue300' as const },
-  { date: 19, color: 'blue400' as const },
-  { date: 20, color: 'blue500' as const },
+  { date: 17, color: "blue200" as const },
+  { date: 18, color: "blue300" as const },
+  { date: 19, color: "blue400" as const },
+  { date: 20, color: "blue500" as const },
   { date: 21 },
   { date: 22 },
   { date: 23 },
@@ -102,32 +99,38 @@ const septemberDays = [
   { date: 1, isEmpty: true },
 ];
 
-const MonthlyReportPage: React.FC<MonthlyReportPageProps> = ({ onBack }) => {
+const MonthlyReportPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <Container>
       <GradientHeader />
-      
+
       <Header>
-        <BackButton onClick={onBack}>
-          <BackIcon />
+        <BackButton onClick={handleBack}>
+          <img src="https://skrr.zerotravel.kr/uploads/6905d1c2-b2c1-4b72-a2bd-81c8574f7577-back_icon.svg" />
         </BackButton>
         <HeaderTitle>수면 기록</HeaderTitle>
       </Header>
-      
+
       <ContentContainer>
         <CalendarContainer>
           <Calendar month="8월" days={augustDays} />
         </CalendarContainer>
-        
+
         <CalendarContainer>
           <Calendar month="9월" days={septemberDays} />
         </CalendarContainer>
-        
+
         <CalendarContainer>
           <Calendar month="10월" days={septemberDays} />
         </CalendarContainer>
       </ContentContainer>
-      
+
       <BottomSpacing />
     </Container>
   );
@@ -137,7 +140,7 @@ const Container = styled.div`
   width: 100%;
   max-width: 412px;
   min-height: 100vh;
-  background: #FFFFFF;
+  background: #ffffff;
   position: relative;
   overflow-x: hidden;
   padding-bottom: 20px;
@@ -148,7 +151,7 @@ const GradientHeader = styled.div`
   width: 100%;
   max-width: 412px;
   height: 416px;
-  background: linear-gradient(180deg, #56A8DA 0%, #3694CE 100%);
+  background: linear-gradient(180deg, #56a8da 0%, #3694ce 100%);
   border-radius: 0px 0px 80px 80px;
   position: absolute;
   top: 0;
@@ -179,30 +182,32 @@ const BackButton = styled.button`
 const BackIcon = styled.div`
   width: 16px;
   height: 16px;
-  
+
   &::before {
-    content: '';
+    content: "";
     display: block;
     width: 9.17px;
     height: 17.41px;
-    background: #FFFFFF;
-    mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 18L9 12L15 6' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+    background: #ffffff;
     mask-size: contain;
   }
 `;
 
 const HeaderTitle = styled.h1`
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
+    Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    sans-serif;
   font-weight: 500;
   font-size: 20px;
   line-height: 23.87px;
   letter-spacing: -0.016em;
-  color: #FFFFFF;
+  color: #ffffff;
   margin: 0;
 `;
 
 const ContentContainer = styled.div`
-  background: #F4F4F4;
+  background: #f4f4f4;
   border-radius: 30px;
   margin: 0 24px;
   padding: 24px;
@@ -215,14 +220,14 @@ const ContentContainer = styled.div`
 `;
 
 const CalendarContainer = styled.div`
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
 `;
 
 const BottomSpacing = styled.div`
   height: 20px;
-  background: #FFFFFF;
+  background: #ffffff;
 `;
 
 export default MonthlyReportPage;
