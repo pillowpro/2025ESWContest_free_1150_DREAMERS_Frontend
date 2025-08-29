@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { androidAPI } from '../../services';
 
 const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +14,13 @@ const BottomNavigation: React.FC = () => {
     return 'home';
   };
   
-  const handleTabChange = (tab: 'home' | 'report' | 'profile') => {
+  const handleTabChange = async (tab: 'home' | 'report' | 'profile') => {
+    try {
+      await androidAPI.vibrateOnce(50, false);
+    } catch (error) {
+      console.log('Vibration not available:', error);
+    }
+
     switch (tab) {
       case 'home':
         navigate('/');
