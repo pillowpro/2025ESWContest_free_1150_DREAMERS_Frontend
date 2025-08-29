@@ -1,7 +1,7 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Calendar } from "../../components/Calendar";
+import BottomNavigation from "../../components/BottomNavigation/BottomNavigation";
 
 // Sample data for August calendar
 const augustDays = [
@@ -100,20 +100,12 @@ const septemberDays = [
 ];
 
 const MonthlyReportPage: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleBack = () => {
-    navigate(-1);
-  };
 
   return (
     <Container>
       <GradientHeader />
 
       <Header>
-        <BackButton onClick={handleBack}>
-          <img src="https://skrr.zerotravel.kr/uploads/6905d1c2-b2c1-4b72-a2bd-81c8574f7577-back_icon.svg" />
-        </BackButton>
         <HeaderTitle>수면 기록</HeaderTitle>
       </Header>
 
@@ -132,6 +124,7 @@ const MonthlyReportPage: React.FC = () => {
       </ContentContainer>
 
       <BottomSpacing />
+      <BottomNavigation />
     </Container>
   );
 };
@@ -162,22 +155,12 @@ const GradientHeader = styled.div`
 const Header = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
   padding: 60px 24px 24px;
   position: relative;
   z-index: 1;
 `;
 
-const BackButton = styled.button`
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
 const HeaderTitle = styled.h1`
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
@@ -212,7 +195,7 @@ const CalendarContainer = styled.div`
 `;
 
 const BottomSpacing = styled.div`
-  height: 20px;
+  height: 100px;
   background: #ffffff;
 `;
 

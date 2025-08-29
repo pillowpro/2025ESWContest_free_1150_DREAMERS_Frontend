@@ -5,6 +5,7 @@ import { theme } from "./styles/theme";
 import { HomePage } from "./pages/HomePage";
 import { MonthlyReportPage } from "./pages/MonthlyReportPage";
 import { MyPage } from "./pages/MyPage";
+import SleepDetailPage from "./pages/SleepDetailPage";
 import {
   Login,
   Signup,
@@ -24,6 +25,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/report" element={<MonthlyReportPage />} />
         <Route path="/profile" element={<MyPage />} />
+        <Route path="/sleep-detail/:date?" element={<SleepDetailPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/agreement" element={<Agreement />} />

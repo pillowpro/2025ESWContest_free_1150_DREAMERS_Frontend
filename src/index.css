@@ -28,6 +28,35 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  
+  /* WebView에서 pull-to-refresh/overscroll 애니메이션 비활성화 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 스크롤바 숨기기 */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* WebView 최적화 */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 h1 {

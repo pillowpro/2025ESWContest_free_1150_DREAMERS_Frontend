@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { theme } from '../../styles/theme';
 
@@ -15,7 +16,15 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ month, days }) => {
+  const navigate = useNavigate();
   const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+
+  const handleDayClick = (date: number) => {
+    if (date > 0 && date <= 31) {
+      const formattedDate = `2024.${month === '8월' ? '08' : month === '9월' ? '09' : '10'}.${date.toString().padStart(2, '0')}`;
+      navigate(`/sleep-detail/${formattedDate}`);
+    }
+  };
   
   // Split days into weeks (7 days each)
   const weeks = [];
@@ -45,6 +54,8 @@ const Calendar: React.FC<CalendarProps> = ({ month, days }) => {
                 key={dayIndex}
                 $color={day.color}
                 $isEmpty={day.isEmpty}
+                onClick={() => !day.isEmpty && handleDayClick(day.date)}
+                $clickable={!day.isEmpty}
               >
                 {!day.isEmpty && (
                   <DayNumber $hasColor={!!day.color}>
@@ -105,7 +116,7 @@ const WeekRow = styled.div`
   gap: 2px;
 `;
 
-const DayCell = styled.div<{ $color?: string; $isEmpty?: boolean }>`
+const DayCell = styled.div<{ $color?: string; $isEmpty?: boolean; $clickable?: boolean }>`
   width: 36px;
   height: 36px;
   border-radius: 18px;
@@ -121,6 +132,12 @@ const DayCell = styled.div<{ $color?: string; $isEmpty?: boolean }>`
       default: return 'transparent';
     }
   }};
+  cursor: ${({ $clickable }) => $clickable ? 'pointer' : 'default'};
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: ${({ $clickable }) => $clickable ? 'scale(1.1)' : 'none'};
+  }
 `;
 
 const DayNumber = styled.span<{ $hasColor: boolean }>`

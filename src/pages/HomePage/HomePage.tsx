@@ -1,8 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSleepScoreClick = () => {
+    navigate('/sleep-detail/2024.08.15');
+  };
+
   return (
     <Container>
       <GradientHeader />
@@ -27,11 +34,11 @@ const HomePage: React.FC = () => {
         
         <CardSection>
           <SectionTitle>수면 점수</SectionTitle>
-          <ScoreValue>65점</ScoreValue>
+          <ClickableScoreValue onClick={handleSleepScoreClick}>65점</ClickableScoreValue>
         </CardSection>
       </SleepDataCard>
       
-      <ScoreDetailCard>
+      <ScoreDetailCard onClick={handleSleepScoreClick}>
         <CardHeader>
           <SectionTitle>수면 점수</SectionTitle>
           <ArrowIcon />
@@ -86,7 +93,6 @@ const HomePage: React.FC = () => {
       <ReportCard>
         <CardHeader>
           <SectionTitle>수면 리포트</SectionTitle>
-          <ArrowIcon />
         </CardHeader>
         
         <ReportGrid>
@@ -171,6 +177,21 @@ const SleepDataCard = styled.div`
   z-index: 1;
 `;
 
+const ClickableScoreValue = styled.span`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 47.73px;
+  letter-spacing: -0.02em;
+  color: #000000;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: #3694CE;
+  }
+`;
+
 const ScoreDetailCard = styled.div`
   margin: 0 20px 20px;
   padding: 32px 24px;
@@ -179,6 +200,12 @@ const ScoreDetailCard = styled.div`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 const ReportCard = styled.div`

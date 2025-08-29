@@ -32,6 +32,9 @@ const BottomNavigation: React.FC = () => {
         navigate('/profile');
         break;
     }
+
+    // 페이지 이동 시 스크롤을 맨 위로
+    window.scrollTo(0, 0);
   };
 
   const activeTab = getActiveTab();
@@ -68,14 +71,19 @@ const BottomNavigation: React.FC = () => {
 const Container = styled.div`
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100vw;
   max-width: 412px;
   height: 80px;
   background: #FFFFFF;
   box-shadow: 0px -2px 5px 0px rgba(0, 0, 0, 0.15);
   z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 12px;
 `;
 
 const NavItem = styled.button<{ $active: boolean; $position: string }>`
@@ -88,13 +96,15 @@ const NavItem = styled.button<{ $active: boolean; $position: string }>`
   background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: absolute;
-  top: 12px;
-  left: ${({ $position }) => 
-    $position === 'home' ? '42px' : 
-    $position === 'report' ? '188px' : 
-    '334px'
-  };
+  margin: 0 50px;
+  
+  &:first-child {
+    margin-left: 0;
+  }
+  
+  &:last-child {
+    margin-right: 0;
+  }
 `;
 
 const HomeIcon = styled.div<{ $active: boolean }>`
