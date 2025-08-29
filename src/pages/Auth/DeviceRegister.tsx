@@ -85,18 +85,6 @@ const Section = styled.div`
   z-index: 1;
 `;
 
-const GradientHeader = styled.div`
-  width: 100%;
-  max-width: 412px;
-  height: 416px;
-  background: linear-gradient(180deg, #56a8da 0%, #3694ce 100%);
-  border-radius: 0 0 80px 80px;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-`;
-
 const Container = styled.div`
   width: 100vw;
   max-width: 412px;

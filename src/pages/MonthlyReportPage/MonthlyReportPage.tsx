@@ -179,20 +179,6 @@ const BackButton = styled.button`
   justify-content: center;
 `;
 
-const BackIcon = styled.div`
-  width: 16px;
-  height: 16px;
-
-  &::before {
-    content: "";
-    display: block;
-    width: 9.17px;
-    height: 17.41px;
-    background: #ffffff;
-    mask-size: contain;
-  }
-`;
-
 const HeaderTitle = styled.h1`
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
     Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR",

@@ -146,10 +146,6 @@ const WifiSignal = styled.div`
   color: #666;
 `;
 
-const WifiIcon = styled.div`
-  font-size: 20px;
-`;
-
 const SearchContainer = styled.div`
   width: 100%;
   display: flex;
