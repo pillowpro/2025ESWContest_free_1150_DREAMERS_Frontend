@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import styled from "styled-components";
 
 interface Prop {
-  text: string;
-  type: string;
+  text?: string;
+  type?: string;
   placeholder: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -33,15 +33,15 @@ const Input = ({ text, type, placeholder, value, onChange }: Prop) => {
     <Container>
       <Title>{text}</Title>
       <Section>
-        <input 
-          type={getInputType()} 
-          placeholder={placeholder} 
-          value={value || ''}
+        <input
+          type={getInputType()}
+          placeholder={placeholder}
+          value={value || ""}
           onChange={onChange}
         />
         {type === "password" && (
-          <EyeIcon 
-            src={getEyeIcon()} 
+          <EyeIcon
+            src={getEyeIcon()}
             onClick={togglePasswordVisibility}
             alt="비밀번호 표시/숨김"
           />
@@ -67,8 +67,8 @@ const Section = styled.div`
     height: 100%;
     border: none;
     font-size: 16px;
-    padding-right: ${({ children }) => children ? '40px' : '12px'};
-    
+    padding-right: ${({ children }) => (children ? "40px" : "12px")};
+
     &:focus {
       outline: none;
     }
@@ -82,7 +82,7 @@ const EyeIcon = styled.img`
   height: 20px;
   cursor: pointer;
   transition: opacity 0.2s ease;
-  
+
   &:hover {
     opacity: 0.7;
   }
