@@ -2,56 +2,29 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from "recharts";
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import BottomNavigation from "../../components/BottomNavigation/BottomNavigation";
 
-// 더미 데이터
-const sleepMovementData = [
-  { time: "22:00", movement: 2 },
-  { time: "23:00", movement: 8 },
-  { time: "00:00", movement: 15 },
-  { time: "01:00", movement: 3 },
-  { time: "02:00", movement: 1 },
-  { time: "03:00", movement: 0 },
-  { time: "04:00", movement: 2 },
-  { time: "05:00", movement: 12 },
-  { time: "06:00", movement: 25 },
-  { time: "07:00", movement: 18 },
-];
-
-const heartRateData = [
-  { time: "22:00", rate: 68 },
-  { time: "23:00", rate: 65 },
-  { time: "00:00", rate: 62 },
-  { time: "01:00", rate: 58 },
-  { time: "02:00", rate: 55 },
-  { time: "03:00", rate: 54 },
-  { time: "04:00", rate: 56 },
-  { time: "05:00", rate: 59 },
-  { time: "06:00", rate: 64 },
-  { time: "07:00", rate: 72 },
-];
-
-const snoringData = [
-  { time: "22:00", intensity: 0 },
-  { time: "23:00", intensity: 2 },
-  { time: "00:00", intensity: 5 },
-  { time: "01:00", intensity: 8 },
-  { time: "02:00", intensity: 12 },
-  { time: "03:00", intensity: 15 },
-  { time: "04:00", intensity: 10 },
-  { time: "05:00", intensity: 6 },
-  { time: "06:00", intensity: 3 },
-  { time: "07:00", intensity: 1 },
-];
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const sleepSummaries = [
   "깊은 잠에 빠져 안정적인 수면을 취했습니다.",
@@ -64,18 +37,121 @@ const sleepSummaries = [
 const SleepDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { date } = useParams<{ date: string }>();
-  
+
   const handleBack = () => {
     navigate(-1);
   };
 
-  // 랜덤 수면 요약 선택
-  const randomSummary = sleepSummaries[Math.floor(Math.random() * sleepSummaries.length)];
+  const randomSummary =
+    sleepSummaries[Math.floor(Math.random() * sleepSummaries.length)];
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: '#E5E5E5',
+          lineWidth: 1,
+        },
+        ticks: {
+          color: '#666',
+          font: {
+            size: 12,
+          },
+        },
+        border: {
+          display: false,
+        },
+      },
+      y: {
+        grid: {
+          color: '#E5E5E5',
+          lineWidth: 1,
+        },
+        ticks: {
+          color: '#666',
+          font: {
+            size: 12,
+          },
+        },
+        border: {
+          display: false,
+        },
+      },
+    },
+  };
+
+  const sleepMovementData = {
+    labels: ["22:00", "23:00", "00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00"],
+    datasets: [
+      {
+        data: [2, 8, 15, 3, 1, 0, 2, 12, 25, 18],
+        borderColor: '#3694CE',
+        backgroundColor: 'rgba(54, 148, 206, 0.3)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#3694CE',
+        pointBorderColor: '#3694CE',
+      },
+    ],
+  };
+
+  const heartRateData = {
+    labels: ["22:00", "23:00", "00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00"],
+    datasets: [
+      {
+        data: [68, 65, 62, 58, 55, 54, 56, 59, 64, 72],
+        borderColor: '#FF6B6B',
+        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#FF6B6B',
+        pointBorderColor: '#FF6B6B',
+      },
+    ],
+  };
+
+  const snoringData = {
+    labels: ["22:00", "23:00", "00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00"],
+    datasets: [
+      {
+        data: [0, 2, 5, 8, 12, 15, 10, 6, 3, 1],
+        borderColor: '#FFA726',
+        backgroundColor: 'rgba(255, 167, 38, 0.3)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#FFA726',
+        pointBorderColor: '#FFA726',
+      },
+    ],
+  };
 
   return (
     <Container>
       <GradientHeader />
-      
+
       <Header>
         <BackButton onClick={handleBack}>
           <BackIcon />
@@ -99,95 +175,31 @@ const SleepDetailPage: React.FC = () => {
         <ChartCard>
           <ChartTitle>수면 중 뒤척임</ChartTitle>
           <ChartContainer>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={sleepMovementData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                <XAxis 
-                  dataKey="time" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="movement"
-                  stroke="#3694CE"
-                  fill="#3694CE"
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Line data={sleepMovementData} options={chartOptions} />
           </ChartContainer>
-          <ChartDescription>뒤척임이 적을수록 깊은 잠을 의미합니다</ChartDescription>
+          <ChartDescription>
+            뒤척임이 적을수록 깊은 잠을 의미합니다
+          </ChartDescription>
         </ChartCard>
 
         <ChartCard>
           <ChartTitle>수면 중 심박수</ChartTitle>
           <ChartContainer>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={heartRateData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                <XAxis 
-                  dataKey="time"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <YAxis 
-                  domain={['dataMin - 5', 'dataMax + 5']}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="rate"
-                  stroke="#FF6B6B"
-                  strokeWidth={2}
-                  dot={{ fill: '#FF6B6B', strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#FF6B6B', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <Line data={heartRateData} options={chartOptions} />
           </ChartContainer>
-          <ChartDescription>수면 중 심박수가 안정적으로 유지되었습니다</ChartDescription>
+          <ChartDescription>
+            수면 중 심박수가 안정적으로 유지되었습니다
+          </ChartDescription>
         </ChartCard>
 
         <ChartCard>
           <ChartTitle>수면 중 코골이</ChartTitle>
           <ChartContainer>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={snoringData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E5" />
-                <XAxis 
-                  dataKey="time"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <YAxis 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 12, fill: '#666' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="intensity"
-                  stroke="#FFA726"
-                  fill="#FFA726"
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Line data={snoringData} options={chartOptions} />
           </ChartContainer>
-          <ChartDescription>새벽 2-4시경 코골이 강도가 높았습니다</ChartDescription>
+          <ChartDescription>
+            새벽 2-4시경 코골이 강도가 높았습니다
+          </ChartDescription>
         </ChartCard>
       </ContentContainer>
 
@@ -247,7 +259,8 @@ const BackIcon = styled.div`
   width: 24px;
   height: 24px;
   background: #ffffff;
-  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat center;
   mask-size: 24px 24px;
 `;
 
@@ -299,7 +312,7 @@ const ScoreValue = styled.div`
   font-family: "Pretendard", sans-serif;
   font-weight: 700;
   font-size: 48px;
-  color: #3694CE;
+  color: #3694ce;
   margin: 8px 0;
 `;
 
@@ -351,7 +364,11 @@ const ChartTitle = styled.h3`
 
 const ChartContainer = styled.div`
   width: 100%;
+  height: 200px;
   margin: 16px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const ChartDescription = styled.p`

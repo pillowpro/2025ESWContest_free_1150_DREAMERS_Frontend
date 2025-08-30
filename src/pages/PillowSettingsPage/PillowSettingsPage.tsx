@@ -21,7 +21,7 @@ const PillowSettingsPage: React.FC = () => {
 
   const locationOptions = [
     "서울특별시",
-    "부산광역시", 
+    "부산광역시",
     "대구광역시",
     "인천광역시",
     "광주광역시",
@@ -36,13 +36,13 @@ const PillowSettingsPage: React.FC = () => {
     "전라남도",
     "경상북도",
     "경상남도",
-    "제주특별자치도"
+    "제주특별자치도",
   ];
 
   return (
     <Container>
       <GradientHeader />
-      
+
       <Header>
         <BackButton onClick={handleBack}>
           <BackIcon />
@@ -53,10 +53,10 @@ const PillowSettingsPage: React.FC = () => {
       <ContentContainer>
         <FormSection>
           <SectionTitle>베개 정보</SectionTitle>
-          
+
           <InputGroup>
-            <Label>베개 이름</Label>
             <Input
+              text="베개 이름"
               value={pillowName}
               onChange={(e) => setPillowName(e.target.value)}
               placeholder="베개 이름을 입력하세요"
@@ -65,8 +65,8 @@ const PillowSettingsPage: React.FC = () => {
 
           <InputGroup>
             <Label>베개 위치</Label>
-            <Select 
-              value={pillowLocation} 
+            <Select
+              value={pillowLocation}
               onChange={(e) => setPillowLocation(e.target.value)}
             >
               {locationOptions.map((location) => (
@@ -101,7 +101,7 @@ const PillowSettingsPage: React.FC = () => {
         </InfoSection>
 
         <ButtonContainer>
-          <Button 
+          <Button
             text="설정 저장"
             onClick={handleSave}
             disabled={!pillowName.trim()}
@@ -125,7 +125,7 @@ const Container = styled.div`
 const GradientHeader = styled.div`
   width: 100%;
   max-width: 412px;
-  height: 200px;
+  height: 420px;
   background: linear-gradient(180deg, #56a8da 0%, #3694ce 100%);
   border-radius: 0px 0px 80px 80px;
   position: absolute;
@@ -161,7 +161,8 @@ const BackIcon = styled.div`
   width: 24px;
   height: 24px;
   background: #ffffff;
-  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat center;
   mask-size: 24px 24px;
 `;
 
@@ -175,7 +176,6 @@ const HeaderTitle = styled.h1`
 `;
 
 const ContentContainer = styled.div`
-  background: #f4f4f4;
   border-radius: 30px;
   margin: 0 24px;
   padding: 24px;
@@ -188,7 +188,6 @@ const ContentContainer = styled.div`
 `;
 
 const FormSection = styled.div`
-  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -197,7 +196,6 @@ const FormSection = styled.div`
 `;
 
 const InfoSection = styled.div`
-  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -209,7 +207,7 @@ const SectionTitle = styled.h2`
   font-family: "Pretendard", sans-serif;
   font-weight: 600;
   font-size: 18px;
-  color: #333333;
+  color: white;
   margin: 0;
 `;
 
@@ -228,10 +226,10 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.label`
-  font-family: "Pretendard", sans-serif;
   font-weight: 500;
-  font-size: 14px;
-  color: #666666;
+  font-size: 18px;
+  font-weight: normal;
+  color: white;
 `;
 
 const Select = styled.select`
@@ -244,10 +242,10 @@ const Select = styled.select`
   font-size: 16px;
   background-color: white;
   color: #333333;
-  
+
   &:focus {
     outline: none;
-    border-color: #3694CE;
+    border-color: #3694ce;
   }
 `;
 
@@ -274,9 +272,7 @@ const StatusValue = styled.span<{ $status?: string }>`
   font-family: "Pretendard", sans-serif;
   font-weight: 600;
   font-size: 16px;
-  color: ${({ $status }) => 
-    $status === 'connected' ? '#4CAF50' : '#333333'
-  };
+  color: ${({ $status }) => ($status === "connected" ? "#4CAF50" : "#333333")};
 `;
 
 const ButtonContainer = styled.div`

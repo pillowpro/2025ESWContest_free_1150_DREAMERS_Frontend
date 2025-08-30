@@ -21,7 +21,7 @@ const ProfileEditPage: React.FC = () => {
   return (
     <Container>
       <GradientHeader />
-      
+
       <Header>
         <BackButton onClick={handleBack}>
           <BackIcon />
@@ -32,10 +32,10 @@ const ProfileEditPage: React.FC = () => {
       <ContentContainer>
         <FormSection>
           <SectionTitle>기본 정보</SectionTitle>
-          
+
           <InputGroup>
-            <Label>이름</Label>
             <Input
+              text="이름"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="이름을 입력하세요"
@@ -44,7 +44,7 @@ const ProfileEditPage: React.FC = () => {
         </FormSection>
 
         <ButtonContainer>
-          <Button 
+          <Button
             text="저장하기"
             onClick={handleSave}
             disabled={!name.trim()}
@@ -68,7 +68,7 @@ const Container = styled.div`
 const GradientHeader = styled.div`
   width: 100%;
   max-width: 412px;
-  height: 200px;
+  height: 360px;
   background: linear-gradient(180deg, #56a8da 0%, #3694ce 100%);
   border-radius: 0px 0px 80px 80px;
   position: absolute;
@@ -103,8 +103,9 @@ const BackButton = styled.button`
 const BackIcon = styled.div`
   width: 24px;
   height: 24px;
-  background: #ffffff;
-  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center;
+  background-color: white;
+  mask: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 12H5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12 19L5 12L12 5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat center;
   mask-size: 24px 24px;
 `;
 
@@ -118,7 +119,6 @@ const HeaderTitle = styled.h1`
 `;
 
 const ContentContainer = styled.div`
-  background: #f4f4f4;
   border-radius: 30px;
   margin: 0 24px;
   padding: 24px;
@@ -131,7 +131,6 @@ const ContentContainer = styled.div`
 `;
 
 const FormSection = styled.div`
-  background: #ffffff;
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -143,7 +142,7 @@ const SectionTitle = styled.h2`
   font-family: "Pretendard", sans-serif;
   font-weight: 600;
   font-size: 18px;
-  color: #333333;
+  color: white;
   margin: 0;
 `;
 
@@ -151,13 +150,6 @@ const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-`;
-
-const Label = styled.label`
-  font-family: "Pretendard", sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: #666666;
 `;
 
 const ButtonContainer = styled.div`
