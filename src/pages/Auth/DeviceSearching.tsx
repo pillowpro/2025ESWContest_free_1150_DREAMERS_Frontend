@@ -2,7 +2,8 @@ import styled, { keyframes } from "styled-components";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AndroidBridge, filterBaeGaeProNetworks, extractDeviceIdFromSSID } from "../../services";
+import { AndroidBridge } from "../../services";
+// import { filterBaeGaeProNetworks, extractDeviceIdFromSSID } from "../../services"; // 임시 주석
 
 interface BaeGaeProNetwork {
   ssid: string;
