@@ -18,6 +18,14 @@ const HomePage: React.FC = () => {
           setDashboardData(response.data.dashboard);
         }
       } catch (error: any) {
+        // 404나 기기 없음 에러인 경우 기기 등록으로 리다이렉트
+        if (error.response?.status === 404 || 
+            error.response?.data?.message?.includes('기기') ||
+            error.response?.data?.message?.includes('device')) {
+          navigate('/device-register', { replace: true });
+          return;
+        }
+        
         setError(error.response?.data?.message || '대시보드 데이터를 불러오는데 실패했습니다.');
         console.error('Dashboard fetch error:', error);
       } finally {
@@ -26,7 +34,7 @@ const HomePage: React.FC = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [navigate]);
 
   const handleSleepScoreClick = () => {
     navigate('/sleep-detail/2024.08.15');
@@ -70,24 +78,24 @@ const HomePage: React.FC = () => {
       <AlarmCard>
         <CardHeader>
           <SectionTitle>알람 설정</SectionTitle>
-          <AlarmStatus $isEnabled={dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled}>
-            {dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled ? 'ON' : 'OFF'}
+          <AlarmStatus $isEnabled={dashboardData.upcoming_alarms?.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled}>
+            {dashboardData.upcoming_alarms?.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled ? 'ON' : 'OFF'}
           </AlarmStatus>
         </CardHeader>
         
         <AlarmTimeContainer>
-          {dashboardData.upcoming_alarms.length > 0 ? (
+          {dashboardData.upcoming_alarms?.length > 0 ? (
             <AlarmTime>{dashboardData.upcoming_alarms[0].alarm_time}</AlarmTime>
           ) : (
             <AlarmTime>--:--</AlarmTime>
           )}
           <AlarmLabel>
-            {dashboardData.upcoming_alarms.length > 0 
+            {dashboardData.upcoming_alarms?.length > 0 
               ? dashboardData.upcoming_alarms[0].label 
               : '알람이 설정되지 않았습니다'
             }
           </AlarmLabel>
-          {dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.smart_wake && (
+          {dashboardData.upcoming_alarms?.length > 0 && dashboardData.upcoming_alarms[0]?.smart_wake && (
             <SmartWakeTag>스마트 알람</SmartWakeTag>
           )}
         </AlarmTimeContainer>
