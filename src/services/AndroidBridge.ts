@@ -105,30 +105,69 @@ class AndroidBridge {
   }
 
   async scanWiFiNetworks(): Promise<WiFiScanResponse> {
+    console.log('[AndroidBridge] Starting WiFi scan...');
+    
+    // Android 인터페이스 확인
+    console.log('[AndroidBridge] Window.Android available:', !!window.Android);
+    if (window.Android) {
+      console.log('[AndroidBridge] Android methods:', Object.getOwnPropertyNames(window.Android));
+    }
+    
     this.checkAndroidAvailability();
     
     try {
+      console.log('[AndroidBridge] Calling window.Android.scanWiFi()...');
       const result = window.Android.scanWiFi();
-      const networks = this.parseAndroidResponse<WiFiNetwork[] | { error: string }>(result);
+      console.log('[AndroidBridge] Raw Android scanWiFi result:', result);
+      console.log('[AndroidBridge] Result type:', typeof result);
+      console.log('[AndroidBridge] Result length:', result?.length);
       
-      if ('error' in networks) {
+      // Android가 JSONArray를 직접 반환하거나 에러 객체를 반환
+      let parsed;
+      try {
+        parsed = JSON.parse(result);
+        console.log('[AndroidBridge] Parsed result:', parsed);
+        console.log('[AndroidBridge] Parsed type:', typeof parsed);
+        console.log('[AndroidBridge] Is array:', Array.isArray(parsed));
+      } catch (parseError) {
+        console.error('[AndroidBridge] JSON parse error:', parseError);
+        console.error('[AndroidBridge] Raw result that failed to parse:', result);
+        throw parseError;
+      }
+      
+      // 에러 객체인 경우
+      if (parsed && typeof parsed === 'object' && 'error' in parsed) {
+        console.error('[AndroidBridge] WiFi scan error from Android:', parsed.error);
         return {
           success: false,
-          error: networks.error,
+          error: parsed.error,
           data: { networks: [] }
         };
       }
       
+      // JSONArray인 경우 (성공)
+      const networks: WiFiNetwork[] = Array.isArray(parsed) ? parsed.map((network: any, index: number) => {
+        console.log(`[AndroidBridge] Network ${index}:`, network);
+        return {
+          ssid: network.ssid || '',
+          bssid: network.bssid || '',
+          level: network.level || -100,
+          rssi: network.rssi || network.level || -100,
+          frequency: network.frequency || 0,
+          capabilities: network.capabilities || ''
+        };
+      }) : [];
+      
+      console.log('[AndroidBridge] Total networks found:', networks.length);
+      console.log('[AndroidBridge] Parsed WiFi networks:', networks);
+      
       return {
         success: true,
-        data: {
-          networks: Array.isArray(networks) ? networks.map(network => ({
-            ...network,
-            rssi: network.level || network.rssi || -100
-          })) : []
-        }
+        data: { networks }
       };
     } catch (error) {
+      console.error('[AndroidBridge] WiFi scan complete failure:', error);
+      console.error('[AndroidBridge] Error stack:', (error as any)?.stack);
       return {
         success: false,
         error: `WiFi scan failed: ${error}`,
@@ -329,10 +368,13 @@ class AndroidBridge {
     this.checkAndroidAvailability();
     
     try {
-      const result = window.Android.logToConsole(level, message, source);
+      const result = window.Android.logToConsole(level, message, source || '');
       return this.parseAndroidResponse<AndroidResponse>(result);
     } catch (error) {
-      throw new Error(`Logging failed: ${error}`);
+      console.error('[AndroidBridge] Native logging failed:', error);
+      // Fallback to browser console
+      console[level](`[Android-${source || 'JS'}]`, message);
+      return { success: false, error: `Logging failed: ${error}` };
     }
   }
 

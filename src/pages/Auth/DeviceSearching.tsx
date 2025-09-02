@@ -20,29 +20,66 @@ const DeviceSearching = () => {
 
   const scanForBaeGaeProNetworks = async () => {
     try {
+      console.log('[DeviceSearching] Starting WiFi scan...');
       setIsScanning(true);
       setError('');
 
-      const androidBridge = new AndroidBridge();
-      const response = await androidBridge.scanWiFiNetworks();
-      if (response.success) {
-        const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
-        
-        const formattedNetworks: BaeGaeProNetwork[] = baeGaeProNetworks.map(network => ({
-          ssid: network.ssid,
-          deviceId: extractDeviceIdFromSSID(network.ssid),
-          signal: getSignalStrength(network.rssi),
-          rssi: network.rssi
-        }));
+      // Android 환경 확인
+      console.log('[DeviceSearching] Checking Android environment...');
+      console.log('[DeviceSearching] window.Android exists:', !!window.Android);
+      
+      if (!window.Android) {
+        console.error('[DeviceSearching] Android interface not available!');
+        setError('Android 인터페이스를 사용할 수 없습니다.');
+        setIsScanning(false);
+        return;
+      }
 
+      const androidBridge = new AndroidBridge();
+      console.log('[DeviceSearching] AndroidBridge created, calling scanWiFiNetworks()...');
+      
+      // Android 네이티브 로그도 기록
+      await androidBridge.logToConsole('info', 'Starting WiFi scan from React', 'DeviceSearching');
+      
+      const response = await androidBridge.scanWiFiNetworks();
+      console.log('[DeviceSearching] WiFi scan response:', response);
+      
+      if (response.success) {
+        console.log('[DeviceSearching] WiFi scan successful!');
+        console.log('[DeviceSearching] Total networks found:', response.data.networks.length);
+        console.log('[DeviceSearching] All networks:', response.data.networks);
+        
+        const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
+        console.log('[DeviceSearching] BaeGaePro networks found:', baeGaeProNetworks.length);
+        console.log('[DeviceSearching] BaeGaePro networks:', baeGaeProNetworks);
+        
+        const formattedNetworks: BaeGaeProNetwork[] = baeGaeProNetworks.map((network, index) => {
+          const formatted = {
+            ssid: network.ssid,
+            deviceId: extractDeviceIdFromSSID(network.ssid),
+            signal: getSignalStrength(network.rssi),
+            rssi: network.rssi
+          };
+          console.log(`[DeviceSearching] Formatted network ${index}:`, formatted);
+          return formatted;
+        });
+
+        console.log('[DeviceSearching] Setting BaeGaePro networks state:', formattedNetworks);
         setBaeGaeProNetworks(formattedNetworks);
       } else {
-        setError('WiFi 스캔에 실패했습니다.');
+        console.error('[DeviceSearching] WiFi scan failed:', response.error);
+        setError(response.error || 'WiFi 스캔에 실패했습니다.');
       }
     } catch (error: any) {
-      console.error('WiFi scan error:', error);
-      setError('WiFi 스캔 중 오류가 발생했습니다.');
+      console.error('[DeviceSearching] WiFi scan exception:', error);
+      console.error('[DeviceSearching] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      setError(`WiFi 스캔 중 오류: ${error.message || '알 수 없는 오류'}`);
     } finally {
+      console.log('[DeviceSearching] WiFi scan complete, setting isScanning to false');
       setIsScanning(false);
     }
   };

@@ -16,6 +16,9 @@ export * from './provisioningAPI';
 export { AndroidBridge } from './AndroidBridge';
 export type { WiFiNetwork, AndroidResponse, WiFiScanResponse } from './AndroidBridge';
 
+// Re-export WiFi utilities
+export * from './wifiUtils';
+
 /**
  * API 유틸리티 함수들
  */
