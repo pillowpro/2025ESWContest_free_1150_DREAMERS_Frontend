@@ -9,6 +9,8 @@ export * from './publicAPI';
 export * from './privateAPI';
 export * from './androidAPI';
 export * from './deviceAPI';
+export * from './authAPI';
+export * from './provisioningAPI';
 
 // Re-export AndroidBridge and types
 export { AndroidBridge } from './AndroidBridge';
@@ -33,6 +35,8 @@ import publicAPI from './publicAPI';
 import privateAPI from './privateAPI';
 import androidAPI from './androidAPI';
 import deviceAPI, { deviceUtils } from './deviceAPI';
+import authAPI from './authAPI';
+import provisioningAPI from './provisioningAPI';
 
 /**
  * 통합 API 객체
@@ -42,6 +46,8 @@ export const API = {
   private: privateAPI,
   android: androidAPI,
   device: deviceAPI,
+  auth: authAPI,
+  provisioning: provisioningAPI,
   utils: apiUtils,
   deviceUtils
 };

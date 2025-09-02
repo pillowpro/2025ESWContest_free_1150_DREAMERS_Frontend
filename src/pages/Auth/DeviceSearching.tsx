@@ -2,27 +2,78 @@ import styled, { keyframes } from "styled-components";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { AndroidBridge, filterBaeGaeProNetworks, extractDeviceIdFromSSID } from "../../services";
+
+interface BaeGaeProNetwork {
+  ssid: string;
+  deviceId: string;
+  signal: string;
+  rssi: number;
+}
 
 const DeviceSearching = () => {
   const navigate = useNavigate();
-  const [searchComplete, setSearchComplete] = useState(false);
   const [selectedWifi, setSelectedWifi] = useState<string>("");
+  const [baeGaeProNetworks, setBaeGaeProNetworks] = useState<BaeGaeProNetwork[]>([]);
+  const [isScanning, setIsScanning] = useState(true);
+  const [error, setError] = useState('');
 
-  const wifiList = [
-    { name: "베개프로 12345678", signal: "매우 좋음" },
-    { name: "베개프로 12345678", signal: "매우 좋음" },
-  ];
+  const scanForBaeGaeProNetworks = async () => {
+    try {
+      setIsScanning(true);
+      setError('');
+
+      const androidBridge = new AndroidBridge();
+      const response = await androidBridge.scanWiFiNetworks();
+      if (response.success) {
+        const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
+        
+        const formattedNetworks: BaeGaeProNetwork[] = baeGaeProNetworks.map(network => ({
+          ssid: network.ssid,
+          deviceId: extractDeviceIdFromSSID(network.ssid),
+          signal: getSignalStrength(network.rssi),
+          rssi: network.rssi
+        }));
+
+        setBaeGaeProNetworks(formattedNetworks);
+      } else {
+        setError('WiFi 스캔에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('WiFi scan error:', error);
+      setError('WiFi 스캔 중 오류가 발생했습니다.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const getSignalStrength = (rssi: number): string => {
+    if (rssi >= -50) return '매우 좋음';
+    if (rssi >= -60) return '좋음';
+    if (rssi >= -70) return '보통';
+    return '약함';
+  };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchComplete(true);
-    }, 3000);
+    // 컴포넌트 마운트 시 WiFi 스캔 시작
+    scanForBaeGaeProNetworks();
 
-    return () => clearTimeout(timer);
+    // 15초 후 재스캔 (BaeGaePro 네트워크를 찾지 못한 경우)
+    const rescanTimer = setTimeout(() => {
+      if (baeGaeProNetworks.length === 0) {
+        scanForBaeGaeProNetworks();
+      }
+    }, 15000);
+
+    return () => {
+      clearTimeout(rescanTimer);
+    };
   }, []);
 
-  const handleWifiSelect = (wifiName: string) => {
-    setSelectedWifi(wifiName);
+  const handleWifiSelect = (network: BaeGaeProNetwork) => {
+    setSelectedWifi(network.ssid);
+    // 선택된 네트워크 정보를 localStorage에 저장
+    localStorage.setItem('SELECTED_DEVICE_NETWORK', JSON.stringify(network));
   };
 
   const handleNext = () => {
@@ -31,13 +82,17 @@ const DeviceSearching = () => {
     }
   };
 
+  const handleRescan = () => {
+    scanForBaeGaeProNetworks();
+  };
+
   return (
     <Container>
       <GradientHeader />
       <Section>
         <Title>베개프로 등록하기</Title>
 
-        {!searchComplete ? (
+        {isScanning ? (
           <>
             <SearchContainer>
               <SearchAnimation>
@@ -47,40 +102,45 @@ const DeviceSearching = () => {
               </SearchAnimation>
             </SearchContainer>
 
-            <Description>주변의 베개프로를 가기를 찾고 있습니다</Description>
+            <Description>주변의 베개프로 기기를 찾고 있습니다</Description>
           </>
         ) : (
           <>
-            <SearchContainer>
-              <SearchAnimation>
-                <OuterRing />
-                <MiddleRing />
-                <InnerCircle />
-              </SearchAnimation>
-            </SearchContainer>
-
-            <Description>주변의 베개프로를 가기를 찾고 있습니다</Description>
-
-            <WifiListContainer>
-              {wifiList.map((wifi, index) => (
-                <WifiItem
-                  key={index}
-                  selected={selectedWifi === wifi.name}
-                  onClick={() => handleWifiSelect(wifi.name)}
-                >
-                  <WifiInfo>
-                    <WifiName>{wifi.name}</WifiName>
-                    <WifiSignal>{wifi.signal}</WifiSignal>
-                  </WifiInfo>
-                  <img src="https://skrr.zerotravel.kr/uploads/97957be0-5859-4fbd-8b28-e34205004c42-wifi_icon.svg" />
-                </WifiItem>
-              ))}
-            </WifiListContainer>
+            {baeGaeProNetworks.length > 0 ? (
+              <>
+                <Description>발견된 베개프로 기기를 선택하세요</Description>
+                <WifiListContainer>
+                  {baeGaeProNetworks.map((network, index) => (
+                    <WifiItem
+                      key={index}
+                      selected={selectedWifi === network.ssid}
+                      onClick={() => handleWifiSelect(network)}
+                    >
+                      <WifiInfo>
+                        <WifiName>베개프로 {network.deviceId}</WifiName>
+                        <WifiSignal>신호 강도: {network.signal}</WifiSignal>
+                      </WifiInfo>
+                      <img src="https://skrr.zerotravel.kr/uploads/97957be0-5859-4fbd-8b28-e34205004c42-wifi_icon.svg" />
+                    </WifiItem>
+                  ))}
+                </WifiListContainer>
+              </>
+            ) : (
+              <>
+                <SearchContainer>
+                  <NoDeviceIcon>❌</NoDeviceIcon>
+                </SearchContainer>
+                <Description>주변에 베개프로 기기를 찾을 수 없습니다</Description>
+                <RescanButton onClick={handleRescan}>다시 검색</RescanButton>
+              </>
+            )}
+            
+            {error && <ErrorMessage>{error}</ErrorMessage>}
           </>
         )}
       </Section>
 
-      {searchComplete && (
+      {baeGaeProNetworks.length > 0 && !isScanning && (
         <SubmitSection>
           <Button text="다음" onClick={handleNext} disabled={!selectedWifi} />
         </SubmitSection>
@@ -144,6 +204,40 @@ const WifiName = styled.div`
 const WifiSignal = styled.div`
   font-size: 14px;
   color: #666;
+`;
+
+const NoDeviceIcon = styled.div`
+  font-size: 48px;
+  margin-bottom: 16px;
+`;
+
+const RescanButton = styled.button`
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
 `;
 
 const SearchContainer = styled.div`

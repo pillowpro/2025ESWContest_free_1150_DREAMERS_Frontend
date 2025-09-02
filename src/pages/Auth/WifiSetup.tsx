@@ -2,7 +2,15 @@ import styled from "styled-components";
 import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { AndroidBridge, generateWiFiPassword } from "../../services";
+
+interface SelectedNetwork {
+  ssid: string;
+  deviceId: string;
+  signal: string;
+  rssi: number;
+}
 
 const WifiSetup = () => {
   const navigate = useNavigate();
@@ -10,17 +18,79 @@ const WifiSetup = () => {
     ssid: '',
     password: ''
   });
+  const [selectedNetwork, setSelectedNetwork] = useState<SelectedNetwork | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    // localStorage에서 선택된 네트워크 정보 가져오기
+    const networkData = localStorage.getItem('SELECTED_DEVICE_NETWORK');
+    if (networkData) {
+      const network: SelectedNetwork = JSON.parse(networkData);
+      setSelectedNetwork(network);
+    } else {
+      // 선택된 네트워크가 없으면 이전 페이지로
+      navigate('/device-searching');
+    }
+  }, [navigate]);
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setWifiData(prev => ({
       ...prev,
       [field]: e.target.value
     }));
+    if (error) setError('');
   };
 
-  const handleNext = () => {
-    if (wifiData.ssid && wifiData.password) {
+  const connectToDeviceWiFi = async (): Promise<boolean> => {
+    if (!selectedNetwork) return false;
+
+    try {
+      const devicePassword = generateWiFiPassword(selectedNetwork.deviceId);
+      
+      const androidBridge = new AndroidBridge();
+      const response = await androidBridge.connectToWiFi({
+        ssid: selectedNetwork.ssid,
+        password: devicePassword,
+        isHidden: false
+      });
+
+      return response.success;
+    } catch (error) {
+      console.error('Device WiFi connection failed:', error);
+      return false;
+    }
+  };
+
+  const handleNext = async () => {
+    if (!wifiData.ssid || !wifiData.password || !selectedNetwork || isConnecting) {
+      return;
+    }
+
+    setIsConnecting(true);
+    setError('');
+
+    try {
+      // 1. 베개프로 WiFi에 연결
+      const deviceConnected = await connectToDeviceWiFi();
+      
+      if (!deviceConnected) {
+        setError('베개프로 기기에 연결할 수 없습니다. 기기가 켜져있는지 확인해주세요.');
+        return;
+      }
+
+      // 2. WiFi 정보를 localStorage에 저장하고 다음 페이지로
+      localStorage.setItem('USER_WIFI_CREDENTIALS', JSON.stringify({
+        ssid: wifiData.ssid,
+        password: wifiData.password
+      }));
+
       navigate("/device-connecting");
+      
+    } catch (error: any) {
+      setError('연결 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -31,6 +101,12 @@ const WifiSetup = () => {
       <GradientHeader />
       <Section>
         <Title>베개프로 등록하기</Title>
+        
+        {selectedNetwork && (
+          <DeviceInfo>
+            선택된 기기: 베개프로 {selectedNetwork.deviceId}
+          </DeviceInfo>
+        )}
         
         <Description>
           이 베개프로가 사용할 와이파이의 정보를 알려주세요
@@ -56,17 +132,19 @@ const WifiSetup = () => {
         <InfoBox>
           <InfoTitle>베개프로 와이파이 연결 안내</InfoTitle>
           <InfoText>
-            베개프로는 2.4Ghz 대역의 와이파이에만 연결할 수 있으므로
-            연결해 주 5Ghz
+            베개프로는 2.4GHz 대역의 와이파이에만 연결할 수 있습니다.
+            5GHz 전용 네트워크는 사용할 수 없습니다.
           </InfoText>
         </InfoBox>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
       
       <SubmitSection>
         <Button 
-          text="다음" 
+          text={isConnecting ? "연결 중..." : "다음"} 
           onClick={handleNext} 
-          disabled={!isFormValid}
+          disabled={!isFormValid || isConnecting}
         />
       </SubmitSection>
     </Container>
@@ -92,6 +170,28 @@ const InfoText = styled.div`
   font-size: 13px;
   color: #666;
   line-height: 1.4;
+`;
+
+const DeviceInfo = styled.div`
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-align: center;
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
 `;
 
 const InputContainer = styled.div`

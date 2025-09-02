@@ -1,12 +1,38 @@
 import styled from "styled-components";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { provisioningAPI } from "../../services";
 
 const DeviceRegister = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleNext = () => {
-    navigate("/device-searching");
+  const handleNext = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await provisioningAPI.requestProvisioningCode({
+        device_type: "pillow",
+        location: "서울시 강남구" // 나중에 사용자 위치로 변경 가능
+      });
+
+      if (response.success) {
+        // 프로비저닝 코드를 localStorage에 저장
+        localStorage.setItem('PROVISIONING_CODE', response.data.provisioning_code);
+        localStorage.setItem('PROVISIONING_EXPIRES_AT', response.data.expires_at);
+        
+        navigate("/device-searching");
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || '프로비저닝 코드 요청에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -22,10 +48,15 @@ const DeviceRegister = () => {
         </DeviceImageContainer>
 
         <Description>위 초기화 화면이 나와야 등록할 수 있습니다</Description>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
 
       <SubmitSection>
-        <Button text="다음" onClick={handleNext} />
+        <Button 
+          text={isLoading ? "프로비저닝 준비 중..." : "다음"} 
+          onClick={handleNext} 
+          disabled={isLoading}
+        />
       </SubmitSection>
     </Container>
   );
@@ -53,6 +84,14 @@ const Description = styled.div`
   color: #666;
   line-height: 1.5;
   margin-top: 20px;
+`;
+
+const ErrorMessage = styled.div`
+  width: 100%;
+  text-align: center;
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: 16px;
 `;
 
 const SubmitSection = styled.div`

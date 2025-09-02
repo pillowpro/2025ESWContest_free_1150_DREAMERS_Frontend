@@ -1,14 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
+import { authAPI, type DashboardResponse } from '../../services';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState<DashboardResponse['data']['dashboard'] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await authAPI.getDashboard();
+        if (response.success) {
+          setDashboardData(response.data.dashboard);
+        }
+      } catch (error: any) {
+        setError(error.response?.data?.message || '대시보드 데이터를 불러오는데 실패했습니다.');
+        console.error('Dashboard fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const handleSleepScoreClick = () => {
     navigate('/sleep-detail/2024.08.15');
   };
+
+  if (loading) {
+    return (
+      <Container>
+        <GradientHeader />
+        <LoadingContainer>
+          <LoadingText>데이터를 불러오는 중...</LoadingText>
+        </LoadingContainer>
+        <BottomNavigation />
+      </Container>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <Container>
+        <GradientHeader />
+        <ErrorContainer>
+          <ErrorText>{error || '데이터를 불러올 수 없습니다.'}</ErrorText>
+        </ErrorContainer>
+        <BottomNavigation />
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -21,22 +67,31 @@ const HomePage: React.FC = () => {
         </GreetingText>
       </GreetingContainer>
       
-      <SleepDataCard>
-        <CardSection>
-          <SectionTitle>지난 밤 수면 데이터</SectionTitle>
-          <SleepTime>
-            <TimeValue>5</TimeValue>
-            <TimeLabel>시간</TimeLabel>
-            <TimeValue>30</TimeValue>
-            <TimeLabel>분</TimeLabel>
-          </SleepTime>
-        </CardSection>
+      <AlarmCard>
+        <CardHeader>
+          <SectionTitle>알람 설정</SectionTitle>
+          <AlarmStatus $isEnabled={dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled}>
+            {dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.is_enabled ? 'ON' : 'OFF'}
+          </AlarmStatus>
+        </CardHeader>
         
-        <CardSection>
-          <SectionTitle>수면 점수</SectionTitle>
-          <ClickableScoreValue onClick={handleSleepScoreClick}>65점</ClickableScoreValue>
-        </CardSection>
-      </SleepDataCard>
+        <AlarmTimeContainer>
+          {dashboardData.upcoming_alarms.length > 0 ? (
+            <AlarmTime>{dashboardData.upcoming_alarms[0].alarm_time}</AlarmTime>
+          ) : (
+            <AlarmTime>--:--</AlarmTime>
+          )}
+          <AlarmLabel>
+            {dashboardData.upcoming_alarms.length > 0 
+              ? dashboardData.upcoming_alarms[0].label 
+              : '알람이 설정되지 않았습니다'
+            }
+          </AlarmLabel>
+          {dashboardData.upcoming_alarms.length > 0 && dashboardData.upcoming_alarms[0]?.smart_wake && (
+            <SmartWakeTag>스마트 알람</SmartWakeTag>
+          )}
+        </AlarmTimeContainer>
+      </AlarmCard>
       
       <ScoreDetailCard onClick={handleSleepScoreClick}>
         <CardHeader>
@@ -46,8 +101,8 @@ const HomePage: React.FC = () => {
         
         <ScoreInfo>
           <ScoreMain>
-            <ScoreValue>65점</ScoreValue>
-            <ScoreStatus>좋음</ScoreStatus>
+            <ScoreValue>{dashboardData.sleep_summary.last_night_score}점</ScoreValue>
+            <ScoreStatus>{dashboardData.sleep_summary.last_night_quality}</ScoreStatus>
           </ScoreMain>
           <Divider />
         </ScoreInfo>
@@ -56,36 +111,41 @@ const HomePage: React.FC = () => {
           <ProgressItem>
             <ProgressLabel>수면 시간</ProgressLabel>
             <ProgressBar>
-              <ProgressFill $width={60} />
+              <ProgressFill $width={(dashboardData.sleep_summary.last_night_duration / 8) * 100} />
             </ProgressBar>
+            <ProgressText>{dashboardData.sleep_summary.last_night_duration}시간</ProgressText>
           </ProgressItem>
           
           <ProgressItem>
             <ProgressLabel>수면 효율</ProgressLabel>
             <ProgressBar>
-              <ProgressFill $width={45} />
+              <ProgressFill $width={dashboardData.quick_stats.sleep_efficiency} />
             </ProgressBar>
+            <ProgressText>{dashboardData.quick_stats.sleep_efficiency}%</ProgressText>
           </ProgressItem>
           
           <ProgressItem>
-            <ProgressLabel>깊은 잠</ProgressLabel>
+            <ProgressLabel>일관성 점수</ProgressLabel>
             <ProgressBar>
-              <ProgressFill $width={75} />
+              <ProgressFill $width={dashboardData.sleep_summary.consistency_score} />
             </ProgressBar>
+            <ProgressText>{dashboardData.sleep_summary.consistency_score}%</ProgressText>
           </ProgressItem>
           
           <ProgressItem>
-            <ProgressLabel>얕은 잠</ProgressLabel>
+            <ProgressLabel>주간 평균</ProgressLabel>
             <ProgressBar>
-              <ProgressFill $width={30} />
+              <ProgressFill $width={dashboardData.sleep_summary.week_average} />
             </ProgressBar>
+            <ProgressText>{dashboardData.sleep_summary.week_average}점</ProgressText>
           </ProgressItem>
           
           <ProgressItem>
-            <ProgressLabel>REM 수면</ProgressLabel>
+            <ProgressLabel>월간 평균</ProgressLabel>
             <ProgressBar>
-              <ProgressFill $width={90} />
+              <ProgressFill $width={dashboardData.sleep_summary.month_average} />
             </ProgressBar>
+            <ProgressText>{dashboardData.sleep_summary.month_average}점</ProgressText>
           </ProgressItem>
         </SleepProgressContainer>
       </ScoreDetailCard>
@@ -97,23 +157,23 @@ const HomePage: React.FC = () => {
         
         <ReportGrid>
           <ReportItem>
-            <ReportLabel>코골이</ReportLabel>
-            <ReportValue>총 10분</ReportValue>
+            <ReportLabel>총 기록 일수</ReportLabel>
+            <ReportValue>{dashboardData.quick_stats.total_nights_tracked}일</ReportValue>
           </ReportItem>
           
           <ReportItem>
-            <ReportLabel>평균 심박</ReportLabel>
-            <ReportValue>80 BPM</ReportValue>
+            <ReportLabel>평균 수면 시간</ReportLabel>
+            <ReportValue>{dashboardData.quick_stats.average_sleep_duration}시간</ReportValue>
           </ReportItem>
           
           <ReportItem>
-            <ReportLabel>평균 체온</ReportLabel>
-            <ReportValue>37.5 °C</ReportValue>
+            <ReportLabel>최고 수면 점수</ReportLabel>
+            <ReportValue>{dashboardData.quick_stats.best_sleep_score}점</ReportValue>
           </ReportItem>
           
           <ReportItem>
-            <ReportLabel>뒤척임</ReportLabel>
-            <ReportValue>심함</ReportValue>
+            <ReportLabel>연속 기록</ReportLabel>
+            <ReportValue>{dashboardData.quick_stats.consistency_streak}일</ReportValue>
           </ReportItem>
         </ReportGrid>
       </ReportCard>
@@ -165,31 +225,94 @@ const GreetingText = styled.h1`
   white-space: pre-line;
 `;
 
-const SleepDataCard = styled.div`
+const AlarmCard = styled.div`
   margin: 0 20px 20px;
   padding: 24px;
   background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
   position: relative;
   z-index: 1;
 `;
 
-const ClickableScoreValue = styled.span`
+const AlarmStatus = styled.div<{ $isEnabled: boolean }>`
+  padding: 4px 12px;
+  background: ${({ $isEnabled }) => $isEnabled ? '#3694CE' : '#D1D1D1'};
+  color: ${({ $isEnabled }) => $isEnabled ? '#FFFFFF' : '#6D6D6D'};
+  border-radius: 12px;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
   font-weight: 600;
-  font-size: 40px;
-  line-height: 47.73px;
+  font-size: 12px;
+  line-height: 14px;
+`;
+
+const AlarmTimeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+`;
+
+const AlarmTime = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 57px;
   letter-spacing: -0.02em;
   color: #000000;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  
-  &:hover {
-    color: #3694CE;
-  }
+`;
+
+const AlarmLabel = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 17px;
+  color: #6D6D6D;
+`;
+
+const SmartWakeTag = styled.div`
+  padding: 4px 8px;
+  background: #E8F4FD;
+  color: #3694CE;
+  border-radius: 6px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 13px;
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  position: relative;
+  z-index: 1;
+`;
+
+const LoadingText = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #FFFFFF;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  position: relative;
+  z-index: 1;
+`;
+
+const ErrorText = styled.div`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #FFFFFF;
+  text-align: center;
 `;
 
 const ScoreDetailCard = styled.div`
@@ -218,12 +341,6 @@ const ReportCard = styled.div`
   z-index: 1;
 `;
 
-const CardSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
 const SectionTitle = styled.h3`
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
   font-weight: 400;
@@ -232,30 +349,6 @@ const SectionTitle = styled.h3`
   letter-spacing: -0.02em;
   color: #000000;
   margin: 0;
-`;
-
-const SleepTime = styled.div`
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-`;
-
-const TimeValue = styled.span`
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
-  font-weight: 600;
-  font-size: 40px;
-  line-height: 47.73px;
-  letter-spacing: -0.02em;
-  color: #000000;
-`;
-
-const TimeLabel = styled.span`
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 15.51px;
-  letter-spacing: -0.02em;
-  color: #000000;
 `;
 
 const ScoreValue = styled.span`
@@ -325,6 +418,15 @@ const ProgressItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+`;
+
+const ProgressText = styled.span`
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 16.71px;
+  color: #3694CE;
+  margin-top: 4px;
 `;
 
 const ProgressLabel = styled.span`

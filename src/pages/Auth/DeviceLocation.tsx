@@ -1,12 +1,16 @@
 import styled from "styled-components";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { provisioningAPI } from "../../services";
 
 const DeviceLocation = () => {
   const navigate = useNavigate();
   const [selectedLocation, setSelectedLocation] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [deviceName, setDeviceName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const locationOptions = [
     "서울특별시",
@@ -28,18 +32,71 @@ const DeviceLocation = () => {
     "제주특별자치도",
   ];
 
+  useEffect(() => {
+    // localStorage에서 연결된 기기 ID 가져오기
+    const deviceId = localStorage.getItem('CONNECTED_DEVICE_ID');
+    if (!deviceId) {
+      // 기기 ID가 없으면 처음부터 다시 시작
+      navigate('/device-register');
+      return;
+    }
+    
+    // 기본 기기 이름 설정
+    setDeviceName(`침실 베개프로`);
+  }, [navigate]);
+
   const handleLocationSelect = (location: string) => {
     setSelectedLocation(location);
     setIsDropdownOpen(false);
+    if (error) setError('');
   };
 
-  const handleNext = () => {
-    if (selectedLocation) {
-      navigate("/device-location-select");
+  const handleDeviceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDeviceName(e.target.value);
+    if (error) setError('');
+  };
+
+  const handleNext = async () => {
+    if (!selectedLocation || !deviceName.trim() || isLoading) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const deviceId = localStorage.getItem('CONNECTED_DEVICE_ID');
+      if (!deviceId) {
+        setError('기기 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      const response = await provisioningAPI.completeSetup({
+        device_id: deviceId,
+        device_name: deviceName.trim(),
+        location_city: selectedLocation,
+        timezone: 'Asia/Seoul'
+      });
+
+      if (response.success) {
+        // 설정 완료 후 저장된 임시 데이터 정리
+        localStorage.removeItem('PROVISIONING_CODE');
+        localStorage.removeItem('PROVISIONING_EXPIRES_AT');
+        localStorage.removeItem('SELECTED_DEVICE_NETWORK');
+        localStorage.removeItem('USER_WIFI_CREDENTIALS');
+        localStorage.removeItem('CONNECTED_DEVICE_ID');
+        
+        // 홈으로 이동
+        navigate('/');
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || '기기 설정 완료에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isFormValid = selectedLocation !== "";
+  const isFormValid = selectedLocation !== "" && deviceName.trim() !== "";
 
   return (
     <Container>
@@ -47,37 +104,56 @@ const DeviceLocation = () => {
       <Section>
         <Title>베개프로 등록하기</Title>
 
-        <QuestionText>이 베개프로의 위치는 어디인가요?</QuestionText>
+        <QuestionText>기기 정보를 입력해주세요</QuestionText>
 
         <InputContainer>
-          <DropdownContainer>
-            <DropdownButton
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              hasValue={selectedLocation !== ""}
-            >
-              {selectedLocation || "지역을 선택해주세요"}
-              <DropdownArrow isOpen={isDropdownOpen}>▼</DropdownArrow>
-            </DropdownButton>
+          <InputSection>
+            <InputLabel>기기 이름</InputLabel>
+            <DeviceNameInput
+              type="text"
+              placeholder="예: 침실 베개프로"
+              value={deviceName}
+              onChange={handleDeviceNameChange}
+            />
+          </InputSection>
 
-            {isDropdownOpen && (
-              <DropdownList>
-                {locationOptions.map((option, index) => (
-                  <DropdownItem
-                    key={index}
-                    onClick={() => handleLocationSelect(option)}
-                    selected={selectedLocation === option}
-                  >
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownList>
-            )}
-          </DropdownContainer>
+          <InputSection>
+            <InputLabel>위치</InputLabel>
+            <DropdownContainer>
+              <DropdownButton
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                hasValue={selectedLocation !== ""}
+              >
+                {selectedLocation || "지역을 선택해주세요"}
+                <DropdownArrow isOpen={isDropdownOpen}>▼</DropdownArrow>
+              </DropdownButton>
+
+              {isDropdownOpen && (
+                <DropdownList>
+                  {locationOptions.map((option, index) => (
+                    <DropdownItem
+                      key={index}
+                      onClick={() => handleLocationSelect(option)}
+                      selected={selectedLocation === option}
+                    >
+                      {option}
+                    </DropdownItem>
+                  ))}
+                </DropdownList>
+              )}
+            </DropdownContainer>
+          </InputSection>
         </InputContainer>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
 
       <SubmitSection>
-        <Button text="다음" onClick={handleNext} disabled={!isFormValid} />
+        <Button 
+          text={isLoading ? "설정 완료 중..." : "완료"} 
+          onClick={handleNext} 
+          disabled={!isFormValid || isLoading} 
+        />
       </SubmitSection>
     </Container>
   );
@@ -86,6 +162,52 @@ const DeviceLocation = () => {
 const InputContainer = styled.div`
   width: 100%;
   margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const InputSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const InputLabel = styled.label`
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+`;
+
+const DeviceNameInput = styled.input`
+  width: 100%;
+  height: 50px;
+  background-color: white;
+  border: 1px solid #d1d1d1;
+  border-radius: 5px;
+  padding: 0 16px;
+  font-size: 16px;
+  color: #333;
+  
+  &::placeholder {
+    color: #999;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #3594ce;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
 `;
 
 const DropdownContainer = styled.div`

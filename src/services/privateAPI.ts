@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
+import publicAPI from './publicAPI';
 
 /**
  * Private API Client
@@ -7,7 +8,7 @@ import axios, { type AxiosInstance } from 'axios';
  * localStorage의 'ACCESS' 토큰을 자동으로 Bearer 헤더에 추가
  * 사용자 정보, 개인 데이터, 설정 등에 사용
  * 
- * Base URL: https://pillow.jiw.app
+ * Base URL: https://pillow.ijw.app
  * 
  * 사용 예시:
  * - 사용자 프로필: privateAPI.get('/user/profile')
@@ -19,7 +20,7 @@ import axios, { type AxiosInstance } from 'axios';
  * - 401 에러 시 토큰 제거 및 로그인 페이지로 리다이렉트
  */
 export const privateAPI: AxiosInstance = axios.create({
-  baseURL: 'https://pillow.jiw.app',
+  baseURL: 'https://pillow.ijw.app',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -43,19 +44,49 @@ privateAPI.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터 - 401 에러 시 토큰 제거 및 로그인 페이지로 리다이렉트
+// 응답 인터셉터 - 토큰 만료 시 자동 갱신
 privateAPI.interceptors.response.use(
   (response) => {
     console.log(`[Private API] Response: ${response.status}`);
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
     console.error(`[Private API] Error:`, error.response?.data || error.message);
     
-    if (error.response?.status === 401) {
-      console.log('[Private API] Unauthorized - removing token and redirecting to login');
-      localStorage.removeItem('ACCESS');
-      window.location.href = '/login';
+    // 401 Unauthorized 처리 및 토큰 갱신
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      const refreshToken = localStorage.getItem('REFRESH_TOKEN');
+      if (refreshToken) {
+        try {
+          // 토큰 갱신 시도
+          const response = await publicAPI.post('/api/v1/auth/refresh', {
+            refresh_token: refreshToken
+          });
+          
+          if (response.data.success) {
+            const newAccessToken = response.data.data.access_token;
+            localStorage.setItem('ACCESS', newAccessToken);
+            
+            // 원본 요청에 새 토큰 적용하여 재시도
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return privateAPI(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('[Private API] Token refresh failed:', refreshError);
+          // 리프레시 토큰도 만료된 경우 로그아웃
+          localStorage.removeItem('ACCESS');
+          localStorage.removeItem('REFRESH_TOKEN');
+          window.location.href = '/login';
+        }
+      } else {
+        // 리프레시 토큰이 없는 경우 로그아웃
+        localStorage.removeItem('ACCESS');
+        window.location.href = '/login';
+      }
     }
     
     return Promise.reject(error);

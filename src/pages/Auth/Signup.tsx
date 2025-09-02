@@ -3,6 +3,7 @@ import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { authAPI, apiUtils } from "../../services";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -10,12 +11,44 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',
+    birth_date: '',
+    gender: 'M' as 'M' | 'F'
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  const handleSignup = () => {
-    if (isFormValid) {
-      navigate("/device-register");
+  const handleSignup = async () => {
+    if (!isFormValid || isLoading) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone || '010-0000-0000', // 임시값
+        birth_date: formData.birth_date || '1990-01-01', // 임시값
+        gender: formData.gender,
+        location: {
+          latitude: 37.5665,
+          longitude: 126.9780,
+          permission_granted: true
+        }
+      });
+      
+      if (response.success) {
+        apiUtils.setAccessToken(response.data.access_token);
+        localStorage.setItem('REFRESH_TOKEN', response.data.refresh_token);
+        navigate("/device-register");
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || '회원가입에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -28,6 +61,7 @@ const Signup = () => {
       ...prev,
       [field]: e.target.value
     }));
+    if (error) setError('');
   };
 
   const isFormValid = 
@@ -70,9 +104,10 @@ const Signup = () => {
           value={formData.confirmPassword}
           onChange={handleInputChange('confirmPassword')}
         />
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
       <SubmitSection>
-        <Button text="가입하기" onClick={handleSignup} disabled={!isFormValid} />
+        <Button text={isLoading ? "가입 중..." : "가입하기"} onClick={handleSignup} disabled={!isFormValid || isLoading} />
         <div>
           이미 계정이 있으신가요? <span onClick={handleLink}>로그인</span>
         </div>
@@ -80,6 +115,12 @@ const Signup = () => {
     </Container>
   );
 };
+
+const ErrorMessage = styled.div`
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: -8px;
+`;
 
 const SubmitSection = styled.div`
   width: 100%;

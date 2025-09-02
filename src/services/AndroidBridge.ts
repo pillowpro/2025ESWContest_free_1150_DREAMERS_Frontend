@@ -4,6 +4,7 @@ interface WiFiNetwork {
   ssid: string;
   bssid: string;
   level: number;
+  rssi: number;
   frequency: number;
   capabilities: string;
 }
@@ -14,9 +15,16 @@ interface AndroidResponse {
   error?: string;
 }
 
-interface WiFiScanResponse {
-  networks?: WiFiNetwork[];
-  error?: string;
+interface WiFiScanResponse extends AndroidResponse {
+  data: {
+    networks: WiFiNetwork[];
+  };
+}
+
+interface WiFiConnectRequest {
+  ssid: string;
+  password: string;
+  isHidden?: boolean;
 }
 
 declare global {
@@ -95,15 +103,61 @@ class AndroidBridge {
     }
   }
 
-  async connectToWiFi(ssid: string, password: string): Promise<AndroidResponse> {
+  async scanWiFiNetworks(): Promise<WiFiScanResponse> {
     this.checkAndroidAvailability();
+    
+    try {
+      const result = window.Android.scanWiFi();
+      const networks = this.parseAndroidResponse<WiFiNetwork[] | { error: string }>(result);
+      
+      if ('error' in networks) {
+        return {
+          success: false,
+          error: networks.error,
+          data: { networks: [] }
+        };
+      }
+      
+      return {
+        success: true,
+        data: {
+          networks: Array.isArray(networks) ? networks.map(network => ({
+            ...network,
+            rssi: network.level || network.rssi || -100
+          })) : []
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: `WiFi scan failed: ${error}`,
+        data: { networks: [] }
+      };
+    }
+  }
+
+  async connectToWiFi(request: WiFiConnectRequest): Promise<AndroidResponse>;
+  async connectToWiFi(ssid: string, password: string): Promise<AndroidResponse>;
+  async connectToWiFi(requestOrSSID: WiFiConnectRequest | string, password?: string): Promise<AndroidResponse> {
+    this.checkAndroidAvailability();
+    
+    let ssid: string;
+    let pass: string;
+    
+    if (typeof requestOrSSID === 'string') {
+      ssid = requestOrSSID;
+      pass = password || '';
+    } else {
+      ssid = requestOrSSID.ssid;
+      pass = requestOrSSID.password;
+    }
     
     if (!ssid.trim()) {
       throw new Error('SSID is required');
     }
 
     try {
-      const result = window.Android.connectToWiFi(ssid, password);
+      const result = window.Android.connectToWiFi(ssid, pass);
       return this.parseAndroidResponse<AndroidResponse>(result);
     } catch (error) {
       throw new Error(`WiFi connection failed: ${error}`);
@@ -304,5 +358,5 @@ export const AndroidAPI = {
 };
 
 export { AndroidBridge };
-export type { WiFiNetwork, AndroidResponse, WiFiScanResponse };
+export type { WiFiNetwork, AndroidResponse, WiFiScanResponse, WiFiConnectRequest };
 export default AndroidBridge;

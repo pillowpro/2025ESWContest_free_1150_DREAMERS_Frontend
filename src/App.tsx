@@ -8,6 +8,7 @@ import { MyPage } from "./pages/MyPage";
 import SleepDetailPage from "./pages/SleepDetailPage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import PillowSettingsPage from "./pages/PillowSettingsPage";
+import AuthGuard from "./components/AuthGuard";
 import {
   Login,
   Signup,
@@ -24,12 +25,15 @@ function App() {
     <ThemeProvider theme={theme}>
       <GlobalStyle />
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/report" element={<MonthlyReportPage />} />
-        <Route path="/profile" element={<MyPage />} />
-        <Route path="/profile/edit" element={<ProfileEditPage />} />
-        <Route path="/pillow/settings" element={<PillowSettingsPage />} />
-        <Route path="/sleep-detail/:date?" element={<SleepDetailPage />} />
+        {/* Protected Routes */}
+        <Route path="/" element={<AuthGuard><HomePage /></AuthGuard>} />
+        <Route path="/report" element={<AuthGuard><MonthlyReportPage /></AuthGuard>} />
+        <Route path="/profile" element={<AuthGuard><MyPage /></AuthGuard>} />
+        <Route path="/profile/edit" element={<AuthGuard><ProfileEditPage /></AuthGuard>} />
+        <Route path="/pillow/settings" element={<AuthGuard><PillowSettingsPage /></AuthGuard>} />
+        <Route path="/sleep-detail/:date?" element={<AuthGuard><SleepDetailPage /></AuthGuard>} />
+        
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/agreement" element={<Agreement />} />

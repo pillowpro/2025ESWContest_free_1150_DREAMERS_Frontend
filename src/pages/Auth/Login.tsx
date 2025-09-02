@@ -3,6 +3,7 @@ import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { authAPI, apiUtils } from "../../services";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   const handleLink = () => {
     navigate("/agreement");
@@ -20,6 +23,31 @@ const Login = () => {
       ...prev,
       [field]: e.target.value
     }));
+    if (error) setError('');
+  };
+
+  const handleLogin = async () => {
+    if (!isFormValid || isLoading) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await authAPI.login({
+        email: formData.email,
+        password: formData.password
+      });
+      
+      if (response.success) {
+        apiUtils.setAccessToken(response.data.access_token);
+        localStorage.setItem('REFRESH_TOKEN', response.data.refresh_token);
+        navigate('/');
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || '로그인에 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isFormValid = formData.email.trim() !== '' && formData.password.trim() !== '';
@@ -43,9 +71,10 @@ const Login = () => {
           value={formData.password}
           onChange={handleInputChange('password')}
         />
+        {error && <ErrorMessage>{error}</ErrorMessage>}
       </Section>
       <SubmitSection>
-        <Button text="로그인" disabled={!isFormValid} />
+        <Button text={isLoading ? "로그인 중..." : "로그인"} disabled={!isFormValid || isLoading} onClick={handleLogin} />
         <div>
           아직 계정이 없으신가요? <span onClick={handleLink}>회원가입</span>
         </div>
@@ -53,6 +82,12 @@ const Login = () => {
     </Container>
   );
 };
+
+const ErrorMessage = styled.div`
+  color: #ff4444;
+  font-size: 14px;
+  margin-top: -8px;
+`;
 
 const SubmitSection = styled.div`
   width: 100%;

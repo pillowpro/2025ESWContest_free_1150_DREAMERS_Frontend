@@ -6,7 +6,7 @@ import axios, { type AxiosInstance } from 'axios';
  * 인증이 필요하지 않은 공개 API 요청을 위한 axios 인스턴스
  * 회원가입, 로그인, 공개 데이터 조회 등에 사용
  * 
- * Base URL: https://pillow.jiw.app
+ * Base URL: https://pillow.ijw.app
  * 
  * 사용 예시:
  * - 회원가입: publicAPI.post('/auth/signup', userData)
@@ -14,7 +14,7 @@ import axios, { type AxiosInstance } from 'axios';
  * - 공개 데이터: publicAPI.get('/public/data')
  */
 export const publicAPI: AxiosInstance = axios.create({
-  baseURL: 'https://pillow.jiw.app',
+  baseURL: 'https://pillow.ijw.app',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
