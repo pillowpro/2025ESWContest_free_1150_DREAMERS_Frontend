@@ -11,29 +11,39 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const checkDeviceAndFetchDashboard = async () => {
       try {
+        // 먼저 사용자의 기기 상태를 확인
+        // 임시로 기본 device_id 사용 (실제로는 사용자의 device_id를 가져와야 함)
+        const deviceId = localStorage.getItem('USER_DEVICE_ID') || 'default';
+        
+        try {
+          const deviceResponse = await authAPI.getDeviceStatus(deviceId);
+          if (!deviceResponse.success || !deviceResponse.data.is_setup_complete) {
+            console.error('Device not found or setup incomplete');
+            navigate('/device-register', { replace: true });
+            return;
+          }
+        } catch (deviceError: any) {
+          console.error('Device status check failed:', deviceError);
+          navigate('/device-register', { replace: true });
+          return;
+        }
+
+        // 기기가 있으면 대시보드 데이터 로드
         const response = await authAPI.getDashboard();
         if (response.success) {
           setDashboardData(response.data.dashboard);
         }
       } catch (error: any) {
-        // 404나 기기 없음 에러인 경우 기기 등록으로 리다이렉트
-        if (error.response?.status === 404 || 
-            error.response?.data?.message?.includes('기기') ||
-            error.response?.data?.message?.includes('device')) {
-          navigate('/device-register', { replace: true });
-          return;
-        }
-        
-        setError(error.response?.data?.message || '대시보드 데이터를 불러오는데 실패했습니다.');
+        setError(error.response?.data?.message || '데이터를 불러오는데 실패했습니다.');
         console.error('Dashboard fetch error:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    checkDeviceAndFetchDashboard();
   }, [navigate]);
 
   const handleSleepScoreClick = () => {

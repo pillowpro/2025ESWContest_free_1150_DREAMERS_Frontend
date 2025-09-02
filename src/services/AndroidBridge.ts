@@ -36,6 +36,7 @@ declare global {
       vibrateOnce(duration: number, fadeInOut: boolean): string;
       vibrate(pattern: string, fadeInOut: boolean): string;
       stopVibration(): string;
+      logToConsole(level: string, message: string, source?: string): string;
     };
   }
 }
@@ -320,6 +321,18 @@ class AndroidBridge {
       return { connectionResult, validationResponse };
     } catch (error) {
       throw new Error(`Connect with validation failed: ${error}`);
+    }
+  }
+
+  // Logging Methods
+  async logToConsole(level: 'error' | 'warn' | 'info' | 'debug', message: string, source?: string): Promise<AndroidResponse> {
+    this.checkAndroidAvailability();
+    
+    try {
+      const result = window.Android.logToConsole(level, message, source);
+      return this.parseAndroidResponse<AndroidResponse>(result);
+    } catch (error) {
+      throw new Error(`Logging failed: ${error}`);
     }
   }
 

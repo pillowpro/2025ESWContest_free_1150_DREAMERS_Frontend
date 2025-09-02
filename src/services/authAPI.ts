@@ -193,6 +193,25 @@ export const authAPI = {
     const response = await privateAPI.get('/api/v1/dashboard');
     return response.data;
   },
+
+  /**
+   * 기기 상태 조회
+   */
+  getDeviceStatus: async (deviceId: string): Promise<{
+    success: boolean;
+    data: {
+      device_id: string;
+      status: string;
+      firmware_version: string;
+      last_seen: string;
+      wifi_rssi: number;
+      battery_level: number;
+      is_setup_complete: boolean;
+    };
+  }> => {
+    const response = await privateAPI.get(`/api/v1/devices/${deviceId}`);
+    return response.data;
+  },
 };
 
 export default authAPI;
