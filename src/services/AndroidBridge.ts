@@ -147,7 +147,7 @@ class AndroidBridge {
       
       // JSONArray인 경우 (성공)
       const networks: WiFiNetwork[] = Array.isArray(parsed) ? parsed.map((network: any, index: number) => {
-        console.log(`[AndroidBridge] Network ${index}:`, network);
+        console.log(`[AndroidBridge] Network ${index}: SSID="${network.ssid}", BSSID="${network.bssid}", RSSI=${network.rssi || network.level}`);
         return {
           ssid: network.ssid || '',
           bssid: network.bssid || '',

@@ -49,14 +49,21 @@ const DeviceSearching = () => {
         console.log('[DeviceSearching] Total networks found:', response.data.networks.length);
         console.log('[DeviceSearching] All networks:', response.data.networks);
         
-        const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
-        console.log('[DeviceSearching] BaeGaePro networks found:', baeGaeProNetworks.length);
-        console.log('[DeviceSearching] BaeGaePro networks:', baeGaeProNetworks);
+        // 디버깅을 위해 임시로 모든 네트워크 표시
+        const allNetworks = response.data.networks;
+        console.log('[DeviceSearching] Showing ALL networks for debugging');
+        
+        // 원래 코드 (나중에 복구)
+        // const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
+        const baeGaeProNetworks = allNetworks; // 임시: 모든 네트워크 표시
+        
+        console.log('[DeviceSearching] Networks to display:', baeGaeProNetworks.length);
+        console.log('[DeviceSearching] Networks detail:', baeGaeProNetworks);
         
         const formattedNetworks: BaeGaeProNetwork[] = baeGaeProNetworks.map((network, index) => {
           const formatted = {
             ssid: network.ssid,
-            deviceId: extractDeviceIdFromSSID(network.ssid),
+            deviceId: network.ssid || 'Unknown', // 임시: SSID를 그대로 표시
             signal: getSignalStrength(network.rssi),
             rssi: network.rssi
           };
@@ -154,8 +161,8 @@ const DeviceSearching = () => {
                       onClick={() => handleWifiSelect(network)}
                     >
                       <WifiInfo>
-                        <WifiName>베개프로 {network.deviceId}</WifiName>
-                        <WifiSignal>신호 강도: {network.signal}</WifiSignal>
+                        <WifiName>{network.ssid}</WifiName>
+                        <WifiSignal>신호 강도: {network.signal} ({network.rssi} dBm)</WifiSignal>
                       </WifiInfo>
                       <img src="https://skrr.zerotravel.kr/uploads/97957be0-5859-4fbd-8b28-e34205004c42-wifi_icon.svg" />
                     </WifiItem>
