@@ -118,20 +118,7 @@ export const generateWiFiPassword = (deviceId: string): string => {
   return `${deviceId}PSWR`;
 };
 
-/**
- * BaeGaePro WiFi 필터링 유틸리티
- */
-export const filterBaeGaeProNetworks = (networks: any[]): any[] => {
-  return networks.filter(network => 
-    network.ssid && network.ssid.startsWith('BaeGaePRO-')
-  );
-};
-
-/**
- * Device ID 추출 유틸리티 (SSID에서)
- */
-export const extractDeviceIdFromSSID = (ssid: string): string => {
-  return ssid.replace('BaeGaePRO-', '');
-};
+// WiFi utility functions moved to wifiUtils.ts
+// Import from there if needed
 
 export default provisioningAPI;
