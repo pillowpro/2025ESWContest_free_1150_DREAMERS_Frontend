@@ -24,11 +24,21 @@ const WifiSetup = () => {
 
   useEffect(() => {
     // localStorage에서 선택된 네트워크 정보 가져오기
+    console.log('[WifiSetup] Loading selected network from localStorage...');
     const networkData = localStorage.getItem('SELECTED_DEVICE_NETWORK');
+    console.log('[WifiSetup] Network data from localStorage:', networkData);
+    
     if (networkData) {
-      const network: SelectedNetwork = JSON.parse(networkData);
-      setSelectedNetwork(network);
+      try {
+        const network: SelectedNetwork = JSON.parse(networkData);
+        console.log('[WifiSetup] Parsed network:', network);
+        setSelectedNetwork(network);
+      } catch (error) {
+        console.error('[WifiSetup] Failed to parse network data:', error);
+        navigate('/device-searching');
+      }
     } else {
+      console.warn('[WifiSetup] No selected network found, redirecting to device searching');
       // 선택된 네트워크가 없으면 이전 페이지로
       navigate('/device-searching');
     }
@@ -43,23 +53,26 @@ const WifiSetup = () => {
   };
 
   const connectToDeviceWiFi = async (): Promise<boolean> => {
-    const networkToUse = selectedNetwork || {
-      ssid: 'PILLOWPRO_DEFAULT',
-      deviceId: 'PILLOW_001',
-      signal: 'Strong',
-      rssi: -40
-    };
+    if (!selectedNetwork) {
+      console.error('No selected network for device connection');
+      return false;
+    }
 
     try {
-      const devicePassword = generateWiFiPassword(networkToUse.deviceId);
+      const devicePassword = generateWiFiPassword(selectedNetwork.deviceId);
+      console.log('[WifiSetup] Connecting to device WiFi:', {
+        ssid: selectedNetwork.ssid,
+        deviceId: selectedNetwork.deviceId
+      });
       
       const androidBridge = new AndroidBridge();
       const response = await androidBridge.connectToWiFi({
-        ssid: networkToUse.ssid,
+        ssid: selectedNetwork.ssid,
         password: devicePassword,
         isHidden: false
       });
 
+      console.log('[WifiSetup] Device WiFi connection response:', response);
       return response.success;
     } catch (error) {
       console.error('Device WiFi connection failed:', error);
@@ -76,20 +89,14 @@ const WifiSetup = () => {
       isFormValid
     });
 
-    if (!wifiData.ssid || !wifiData.password || isConnecting) {
-      console.log('Form validation failed - missing SSID or password');
-      return;
-    }
-
-    if (!selectedNetwork) {
-      console.warn('No selected network found, using default device info');
-      // selectedNetwork가 없으면 기본값으로 설정
-      setSelectedNetwork({
-        ssid: 'PILLOWPRO_DEFAULT',
-        deviceId: 'PILLOW_001',
-        signal: 'Strong',
-        rssi: -40
+    if (!wifiData.ssid || !wifiData.password || !selectedNetwork || isConnecting) {
+      console.log('Form validation failed:', {
+        ssid: !!wifiData.ssid,
+        password: !!wifiData.password,
+        selectedNetwork: !!selectedNetwork,
+        isConnecting
       });
+      return;
     }
 
     setIsConnecting(true);
@@ -130,6 +137,8 @@ const WifiSetup = () => {
         {selectedNetwork && (
           <DeviceInfo>
             선택된 기기: 베개프로 {selectedNetwork.deviceId}
+            <br />
+            <DeviceNetwork>기기 네트워크: {selectedNetwork.ssid}</DeviceNetwork>
           </DeviceInfo>
         )}
         
@@ -206,6 +215,12 @@ const DeviceInfo = styled.div`
   font-weight: 500;
   margin-bottom: 20px;
   text-align: center;
+`;
+
+const DeviceNetwork = styled.span`
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 400;
 `;
 
 const ErrorMessage = styled.div`
