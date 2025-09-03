@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
+import { authAPI } from '../../services';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,44 +11,67 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // 더미 데이터로 홈 화면 채우기
-    const loadDummyData = () => {
-      const dummyData = {
-        upcoming_alarms: [
-          {
-            id: "1",
-            alarm_time: "07:30",
-            label: "출근 준비",
-            is_enabled: true,
-            smart_wake: true,
-            days: ["mon", "tue", "wed", "thu", "fri"]
+    const checkFirstLoginAndLoadData = async () => {
+      try {
+        // 먼저 사용자 프로필을 가져와서 첫 로그인인지 확인
+        const profileResponse = await authAPI.getProfile();
+        
+        if (profileResponse.success) {
+          // 사용자가 기기를 등록했는지 확인 (is_first_login 또는 has_registered_device 필드 체크)
+          if (profileResponse.data.profile.is_first_login || !profileResponse.data.profile.has_registered_device) {
+            // 첫 로그인이거나 기기를 등록하지 않았으면 기기 등록 페이지로 이동
+            navigate('/device-register', { replace: true });
+            return;
           }
-        ],
-        sleep_summary: {
-          last_night_score: 85,
-          last_night_quality: "좋음",
-          last_night_duration: 7.5,
-          consistency_score: 78,
-          week_average: 82,
-          month_average: 79
-        },
-        quick_stats: {
-          total_nights_tracked: 45,
-          average_sleep_duration: 7.2,
-          best_sleep_score: 96,
-          consistency_streak: 12,
-          sleep_efficiency: 88
         }
+      } catch (error) {
+        console.error('Profile check failed:', error);
+        // 프로필 체크 실패시에도 기기 등록 페이지로 이동
+        navigate('/device-register', { replace: true });
+        return;
+      }
+
+      // 기기 등록이 완료된 사용자는 더미 데이터 로드
+      const loadDummyData = () => {
+        const dummyData = {
+          upcoming_alarms: [
+            {
+              id: "1",
+              alarm_time: "07:30",
+              label: "출근 준비",
+              is_enabled: true,
+              smart_wake: true,
+              days: ["mon", "tue", "wed", "thu", "fri"]
+            }
+          ],
+          sleep_summary: {
+            last_night_score: 85,
+            last_night_quality: "좋음",
+            last_night_duration: 7.5,
+            consistency_score: 78,
+            week_average: 82,
+            month_average: 79
+          },
+          quick_stats: {
+            total_nights_tracked: 45,
+            average_sleep_duration: 7.2,
+            best_sleep_score: 96,
+            consistency_streak: 12,
+            sleep_efficiency: 88
+          }
+        };
+        
+        setDashboardData(dummyData);
+        setLoading(false);
       };
-      
-      setDashboardData(dummyData);
-      setLoading(false);
+
+      // 실제 로딩 시간을 시뮬레이션
+      setTimeout(() => {
+        loadDummyData();
+      }, 1000);
     };
 
-    // 실제 로딩 시간을 시뮬레이션
-    setTimeout(() => {
-      loadDummyData();
-    }, 1000);
+    checkFirstLoginAndLoadData();
   }, [navigate]);
 
   const handleSleepScoreClick = () => {
