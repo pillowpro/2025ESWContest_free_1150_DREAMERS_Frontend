@@ -43,14 +43,19 @@ const WifiSetup = () => {
   };
 
   const connectToDeviceWiFi = async (): Promise<boolean> => {
-    if (!selectedNetwork) return false;
+    const networkToUse = selectedNetwork || {
+      ssid: 'PILLOWPRO_DEFAULT',
+      deviceId: 'PILLOW_001',
+      signal: 'Strong',
+      rssi: -40
+    };
 
     try {
-      const devicePassword = generateWiFiPassword(selectedNetwork.deviceId);
+      const devicePassword = generateWiFiPassword(networkToUse.deviceId);
       
       const androidBridge = new AndroidBridge();
       const response = await androidBridge.connectToWiFi({
-        ssid: selectedNetwork.ssid,
+        ssid: networkToUse.ssid,
         password: devicePassword,
         isHidden: false
       });
@@ -71,9 +76,20 @@ const WifiSetup = () => {
       isFormValid
     });
 
-    if (!wifiData.ssid || !wifiData.password || !selectedNetwork || isConnecting) {
-      console.log('Form validation failed');
+    if (!wifiData.ssid || !wifiData.password || isConnecting) {
+      console.log('Form validation failed - missing SSID or password');
       return;
+    }
+
+    if (!selectedNetwork) {
+      console.warn('No selected network found, using default device info');
+      // selectedNetwork가 없으면 기본값으로 설정
+      setSelectedNetwork({
+        ssid: 'PILLOWPRO_DEFAULT',
+        deviceId: 'PILLOW_001',
+        signal: 'Strong',
+        rssi: -40
+      });
     }
 
     setIsConnecting(true);
