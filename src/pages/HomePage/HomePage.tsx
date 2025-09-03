@@ -11,16 +11,7 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // 로컬스토리지에서 기기 등록 완료 여부 체크
-    const isDeviceRegistered = localStorage.getItem('DEVICE_REGISTERED');
-    
-    if (!isDeviceRegistered) {
-      // 기기 등록이 안되어 있으면 기기 등록 페이지로 이동
-      navigate('/device-register', { replace: true });
-      return;
-    }
-
-    // 기기 등록이 완료된 사용자는 더미 데이터 로드
+    // 모든 사용자가 바로 홈화면 보도록 수정 - 더미 데이터 로드
     const loadDummyData = () => {
       const dummyData = {
         upcoming_alarms: [
