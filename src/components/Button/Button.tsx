@@ -7,11 +7,26 @@ interface Prop {
 }
 
 const Button = ({ text, onClick, disabled = false }: Prop) => {
-  const handleClick = () => {
-    if (!disabled && onClick) {
-      console.log('Button clicked:', text);
-      onClick();
+  const handleClick = (e: React.MouseEvent) => {
+    console.log('[Button] Click event triggered:', {
+      text,
+      disabled,
+      hasOnClick: !!onClick,
+      eventType: e.type
+    });
+    
+    if (disabled) {
+      console.log('[Button] Click ignored - button is disabled');
+      return;
     }
+    
+    if (!onClick) {
+      console.log('[Button] Click ignored - no onClick handler');
+      return;
+    }
+    
+    console.log('[Button] Executing onClick for:', text);
+    onClick();
   };
 
   return (

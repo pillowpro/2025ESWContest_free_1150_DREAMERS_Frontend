@@ -45,10 +45,16 @@ const WifiSetup = () => {
   }, [navigate]);
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWifiData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
+    const value = e.target.value;
+    console.log(`[WifiSetup] Input change - ${field}:`, value);
+    setWifiData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      console.log('[WifiSetup] New wifiData:', newData);
+      return newData;
+    });
     if (error) setError('');
   };
 
@@ -127,6 +133,15 @@ const WifiSetup = () => {
   };
 
   const isFormValid = wifiData.ssid.trim() !== '' && wifiData.password.trim() !== '';
+  
+  // 디버깅을 위한 실시간 로그
+  console.log('[WifiSetup] Current state:', {
+    ssid: wifiData.ssid,
+    password: wifiData.password ? 'HAS_PASSWORD' : 'NO_PASSWORD',
+    selectedNetwork,
+    isConnecting,
+    isFormValid
+  });
 
   return (
     <Container>
@@ -177,7 +192,18 @@ const WifiSetup = () => {
       <SubmitSection>
         <Button 
           text={isConnecting ? "연결 중..." : "다음"} 
-          onClick={handleNext} 
+          onClick={() => {
+            console.log('[WifiSetup] Button clicked!');
+            console.log('[WifiSetup] Button state at click:', {
+              isFormValid,
+              isConnecting,
+              disabled: !isFormValid || isConnecting,
+              ssid: wifiData.ssid,
+              password: wifiData.password ? 'HAS_PASSWORD' : 'NO_PASSWORD',
+              selectedNetwork: !!selectedNetwork
+            });
+            handleNext();
+          }} 
           disabled={!isFormValid || isConnecting}
         />
       </SubmitSection>
