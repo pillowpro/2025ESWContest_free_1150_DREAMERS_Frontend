@@ -33,7 +33,7 @@ declare global {
       scanWiFi(): string;
       connectToWiFi(ssid: string, password: string): string;
       connectToWiFiAsSecondary(ssid: string, password: string): string;
-      configureESP32WiFi(ssid: string, password: string, provisioningCode: string): string;
+      configureESP32WiFi(ssid: string, password: string, provisioningCode: string, callback: string): void;
       vibrateOnce(duration: number, fadeInOut: boolean): string;
       vibrate(pattern: string, fadeInOut: boolean): string;
       stopVibration(): string;
@@ -235,16 +235,44 @@ class AndroidBridge {
       throw new Error('Provisioning code is required');
     }
 
-    try {
-      await this.logToConsole('info', `[AndroidBridge] Configuring ESP32 WiFi - SSID: ${ssid}, Provisioning: ${provisioningCode}`, 'AndroidBridge');
-      const result = window.Android.configureESP32WiFi(ssid, password, provisioningCode);
-      const response = this.parseAndroidResponse<AndroidResponse>(result);
-      await this.logToConsole('info', `[AndroidBridge] ESP32 WiFi configuration result: ${JSON.stringify(response)}`, 'AndroidBridge');
-      return response;
-    } catch (error) {
-      await this.logToConsole('error', `[AndroidBridge] ESP32 WiFi configuration failed: ${error}`, 'AndroidBridge');
-      throw new Error(`ESP32 WiFi configuration failed: ${error}`);
-    }
+    return new Promise((resolve, reject) => {
+      // 고유한 콜백 함수명 생성
+      const callbackName = `esp32Config_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      // 전역 콜백 함수 등록
+      (window as any)[callbackName] = (response: any) => {
+        // 콜백 함수 정리
+        delete (window as any)[callbackName];
+
+        this.logToConsole('info', `[AndroidBridge] ESP32 callback response: ${JSON.stringify(response)}`, 'AndroidBridge');
+
+        if (response.success) {
+          try {
+            // data가 문자열이면 파싱, 아니면 그대로 사용
+            const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+            resolve({ success: true, message: data.message || 'Configuration successful', ...data });
+          } catch (e) {
+            // JSON 파싱 실패 시 원본 데이터 사용
+            resolve({ success: true, message: response.data || 'Configuration successful' });
+          }
+        } else {
+          reject(new Error(response.error || 'ESP32 WiFi configuration failed'));
+        }
+      };
+
+      try {
+        this.logToConsole('info', `[AndroidBridge] Configuring ESP32 WiFi - SSID: ${ssid}, Provisioning: ${provisioningCode}, Callback: ${callbackName}`, 'AndroidBridge');
+        
+        // Android 네이티브 함수 호출 (콜백 방식)
+        window.Android.configureESP32WiFi(ssid, password, provisioningCode, callbackName);
+        
+      } catch (error) {
+        // 콜백 함수 정리
+        delete (window as any)[callbackName];
+        this.logToConsole('error', `[AndroidBridge] ESP32 WiFi configuration call failed: ${error}`, 'AndroidBridge');
+        reject(new Error(`ESP32 WiFi configuration failed: ${error}`));
+      }
+    });
   }
 
   // Vibration Methods
