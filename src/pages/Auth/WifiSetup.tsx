@@ -109,7 +109,8 @@ const WifiSetup = () => {
     }
 
     try {
-      androidBridge.logToConsole('info', `[WifiSetup] Configuring ESP32 WiFi - SSID: ${wifiData.ssid}`, 'WifiSetup');
+      androidBridge.logToConsole('info', `[WifiSetup] Starting ESP32 WiFi configuration...`, 'WifiSetup');
+      androidBridge.logToConsole('info', `[WifiSetup] Parameters - SSID: ${wifiData.ssid}, Provisioning: ${provisioningCode}`, 'WifiSetup');
       
       const response = await AndroidAPI.configureESP32WiFi(
         wifiData.ssid,
@@ -117,10 +118,11 @@ const WifiSetup = () => {
         provisioningCode
       );
 
-      androidBridge.logToConsole('info', `[WifiSetup] ESP32 configuration result: ${JSON.stringify(response)}`, 'WifiSetup');
-      return response.success;
+      androidBridge.logToConsole('info', `[WifiSetup] ESP32 configuration SUCCESS: ${JSON.stringify(response)}`, 'WifiSetup');
+      return true; // response 자체가 성공을 의미
+      
     } catch (error) {
-      androidBridge.logToConsole('error', `[WifiSetup] ESP32 configuration failed: ${error}`, 'WifiSetup');
+      androidBridge.logToConsole('error', `[WifiSetup] ESP32 configuration FAILED: ${error}`, 'WifiSetup');
       return false;
     }
   };
