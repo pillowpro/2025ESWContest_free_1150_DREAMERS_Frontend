@@ -78,6 +78,9 @@ const DeviceLocation = () => {
       });
 
       if (response.success) {
+        // 기기 등록 완료 표시
+        localStorage.setItem('DEVICE_REGISTERED', 'true');
+        
         // 설정 완료 후 저장된 임시 데이터 정리
         localStorage.removeItem('PROVISIONING_CODE');
         localStorage.removeItem('PROVISIONING_EXPIRES_AT');
