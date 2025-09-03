@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
 import { Modal } from '../../components/Modal';
+import { authAPI } from '../../services';
 
 const MyPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,9 +26,19 @@ const MyPage: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmLogout = () => {
-    // TODO: 실제 로그아웃 API 호출
-    navigate('/login');
+  const confirmLogout = async () => {
+    try {
+      await authAPI.logout();
+      localStorage.removeItem('ACCESS');
+      localStorage.removeItem('REFRESH_TOKEN');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // 에러가 있어도 로컬에서는 로그아웃 처리
+      localStorage.removeItem('ACCESS');
+      localStorage.removeItem('REFRESH_TOKEN');
+      navigate('/login');
+    }
   };
 
   const confirmDeleteAccount = () => {

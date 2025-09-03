@@ -3,7 +3,7 @@ import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { authAPI, apiUtils } from "../../services";
+import { authAPI } from "../../services";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const Login = () => {
       });
       
       if (response.success) {
-        apiUtils.setAccessToken(response.data.access_token);
+        localStorage.setItem('ACCESS', response.data.access_token);
         localStorage.setItem('REFRESH_TOKEN', response.data.refresh_token);
         navigate('/');
       }

@@ -3,7 +3,7 @@ import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { authAPI, apiUtils } from "../../services";
+import { authAPI } from "../../services";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -26,24 +26,14 @@ const Signup = () => {
     setError('');
     
     try {
-      const response = await authAPI.register({
+      const response = await authAPI.signup({
         email: formData.email,
         password: formData.password,
-        name: formData.name,
-        phone: formData.phone || '010-0000-0000', // 임시값
-        birth_date: formData.birth_date || '1990-01-01', // 임시값
-        gender: formData.gender,
-        location: {
-          latitude: 37.5665,
-          longitude: 126.9780,
-          permission_granted: true
-        }
+        name: formData.name
       });
       
       if (response.success) {
-        apiUtils.setAccessToken(response.data.access_token);
-        localStorage.setItem('REFRESH_TOKEN', response.data.refresh_token);
-        navigate("/device-register");
+        navigate("/login");
       }
     } catch (error: any) {
       setError(error.response?.data?.message || '회원가입에 실패했습니다.');

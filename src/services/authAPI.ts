@@ -8,49 +8,40 @@ export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  phone: string;
-  birth_date: string;
-  gender: 'M' | 'F';
-  location: {
-    latitude: number;
-    longitude: number;
-    permission_granted: boolean;
-  };
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
-  fcm_token?: string;
 }
 
 export interface RefreshRequest {
   refresh_token: string;
 }
 
-export interface AuthResponse {
-  success: boolean;
-  message?: string;
+export interface RegisterResponse {
+  success: true;
+  message: string;
+}
+
+export interface LoginResponse {
+  success: true;
   data: {
-    user_id: string;
     access_token: string;
     refresh_token: string;
-    expires_in: number;
-    location_saved?: boolean;
-    user?: {
-      name: string;
-      email: string;
-      devices_count: number;
-    };
   };
 }
 
 export interface RefreshResponse {
-  success: boolean;
+  success: true;
   data: {
     access_token: string;
-    expires_in: number;
   };
+}
+
+export interface LogoutResponse {
+  success: true;
+  message: string;
 }
 
 export interface DashboardResponse {
@@ -165,15 +156,15 @@ export const authAPI = {
   /**
    * 사용자 회원가입
    */
-  register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    const response = await publicAPI.post('/api/v1/auth/register', data);
+  signup: async (data: RegisterRequest): Promise<RegisterResponse> => {
+    const response = await publicAPI.post('/api/v1/auth/signup', data);
     return response.data;
   },
 
   /**
    * 사용자 로그인
    */
-  login: async (data: LoginRequest): Promise<AuthResponse> => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await publicAPI.post('/api/v1/auth/login', data);
     return response.data;
   },
@@ -181,8 +172,16 @@ export const authAPI = {
   /**
    * 토큰 갱신
    */
-  refresh: async (data: RefreshRequest): Promise<RefreshResponse> => {
-    const response = await publicAPI.post('/api/v1/auth/refresh', data);
+  refresh: async (): Promise<RefreshResponse> => {
+    const response = await privateAPI.post('/api/v1/auth/refresh');
+    return response.data;
+  },
+
+  /**
+   * 로그아웃
+   */
+  logout: async (): Promise<LogoutResponse> => {
+    const response = await privateAPI.post('/api/v1/auth/logout');
     return response.data;
   },
 

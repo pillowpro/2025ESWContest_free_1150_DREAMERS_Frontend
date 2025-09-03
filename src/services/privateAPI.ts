@@ -62,10 +62,14 @@ privateAPI.interceptors.response.use(
       const refreshToken = localStorage.getItem('REFRESH_TOKEN');
       if (refreshToken) {
         try {
-          // 토큰 갱신 시도
-          const response = await publicAPI.post('/api/v1/auth/refresh', {
-            refresh_token: refreshToken
-          });
+          // 토큰 갱신 시도 - refresh token을 Bearer 헤더로 전송
+          const response = await axios.create({
+            baseURL: 'https://pillow.ijw.app',
+            headers: {
+              'Authorization': `Bearer ${refreshToken}`,
+              'Content-Type': 'application/json'
+            }
+          }).post('/api/v1/auth/refresh');
           
           if (response.data.success) {
             const newAccessToken = response.data.data.access_token;
