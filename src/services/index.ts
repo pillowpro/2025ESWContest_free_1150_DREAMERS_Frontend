@@ -13,7 +13,7 @@ export * from './authAPI';
 export * from './provisioningAPI';
 
 // Re-export AndroidBridge and types
-export { AndroidBridge } from './AndroidBridge';
+export { AndroidBridge, AndroidAPI } from './AndroidBridge';
 export type { WiFiNetwork, AndroidResponse, WiFiScanResponse } from './AndroidBridge';
 
 // Re-export WiFi utilities
