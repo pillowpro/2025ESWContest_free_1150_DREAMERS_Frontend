@@ -24,27 +24,67 @@ const WifiSetup = () => {
   const [selectedNetwork, setSelectedNetwork] = useState<SelectedNetwork | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState('');
+  const [isBaeGaeProConnected, setIsBaeGaeProConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('베개프로 기기에 연결 중...');
 
   useEffect(() => {
-    // localStorage에서 선택된 네트워크 정보 가져오기
-    androidBridge.logToConsole('info', '[WifiSetup] Loading selected network from localStorage...', 'WifiSetup');
-    const networkData = localStorage.getItem('SELECTED_DEVICE_NETWORK');
-    androidBridge.logToConsole('info', `[WifiSetup] Network data: ${networkData}`, 'WifiSetup');
-    
-    if (networkData) {
-      try {
-        const network: SelectedNetwork = JSON.parse(networkData);
-        androidBridge.logToConsole('info', `[WifiSetup] Parsed network: ${JSON.stringify(network)}`, 'WifiSetup');
-        setSelectedNetwork(network);
-      } catch (error) {
-        androidBridge.logToConsole('error', `[WifiSetup] Failed to parse network data: ${error}`, 'WifiSetup');
+    const initializeWiFiSetup = async () => {
+      // localStorage에서 선택된 네트워크 정보 가져오기
+      androidBridge.logToConsole('info', '[WifiSetup] Loading selected network from localStorage...', 'WifiSetup');
+      const networkData = localStorage.getItem('SELECTED_DEVICE_NETWORK');
+      androidBridge.logToConsole('info', `[WifiSetup] Network data: ${networkData}`, 'WifiSetup');
+      
+      if (networkData) {
+        try {
+          const network: SelectedNetwork = JSON.parse(networkData);
+          androidBridge.logToConsole('info', `[WifiSetup] Parsed network: ${JSON.stringify(network)}`, 'WifiSetup');
+          setSelectedNetwork(network);
+          
+          // 베개프로 WiFi에 자동 연결
+          await connectToSelectedBaeGaeProWiFi(network);
+          
+        } catch (error) {
+          androidBridge.logToConsole('error', `[WifiSetup] Failed to parse network data: ${error}`, 'WifiSetup');
+          navigate('/device-searching');
+        }
+      } else {
+        androidBridge.logToConsole('warn', '[WifiSetup] No selected network found, redirecting', 'WifiSetup');
         navigate('/device-searching');
       }
-    } else {
-      androidBridge.logToConsole('warn', '[WifiSetup] No selected network found, redirecting', 'WifiSetup');
-      navigate('/device-searching');
-    }
+    };
+
+    initializeWiFiSetup();
   }, [navigate]);
+
+  const connectToSelectedBaeGaeProWiFi = async (network: SelectedNetwork): Promise<void> => {
+    try {
+      setConnectionStatus('베개프로 기기에 연결 중...');
+      androidBridge.logToConsole('info', `[WifiSetup] Connecting to BaeGaePRO WiFi: ${network.ssid}`, 'WifiSetup');
+      
+      const devicePassword = generateWiFiPassword(network.deviceId);
+      androidBridge.logToConsole('info', `[WifiSetup] Generated device password for ${network.deviceId}`, 'WifiSetup');
+      
+      const response = await androidBridge.connectToWiFi({
+        ssid: network.ssid,
+        password: devicePassword,
+        isHidden: false
+      });
+
+      if (response.success) {
+        androidBridge.logToConsole('info', `[WifiSetup] Successfully connected to BaeGaePRO WiFi: ${network.ssid}`, 'WifiSetup');
+        setIsBaeGaeProConnected(true);
+        setConnectionStatus('베개프로 기기에 연결됨 ✅');
+      } else {
+        androidBridge.logToConsole('error', `[WifiSetup] Failed to connect to BaeGaePRO WiFi: ${response.message || 'Unknown error'}`, 'WifiSetup');
+        setConnectionStatus('베개프로 기기 연결 실패 ❌');
+        setError('베개프로 기기에 연결할 수 없습니다. 기기가 켜져있는지 확인해주세요.');
+      }
+    } catch (error) {
+      androidBridge.logToConsole('error', `[WifiSetup] BaeGaePRO WiFi connection error: ${error}`, 'WifiSetup');
+      setConnectionStatus('베개프로 기기 연결 오류 ❌');
+      setError('베개프로 기기 연결 중 오류가 발생했습니다.');
+    }
+  };
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -99,6 +139,12 @@ const WifiSetup = () => {
       return;
     }
 
+    if (!isBaeGaeProConnected) {
+      androidBridge.logToConsole('warn', '[WifiSetup] Cannot configure - not connected to BaeGaePRO WiFi', 'WifiSetup');
+      setError('먼저 베개프로 기기에 연결해야 합니다. 페이지를 새로고침해주세요.');
+      return;
+    }
+
     setIsConnecting(true);
     setError('');
 
@@ -146,6 +192,10 @@ const WifiSetup = () => {
             <DeviceNetwork>기기 네트워크: {selectedNetwork.ssid}</DeviceNetwork>
           </DeviceInfo>
         )}
+
+        <ConnectionStatus connected={isBaeGaeProConnected}>
+          {connectionStatus}
+        </ConnectionStatus>
         
         <Description>
           이 베개프로가 사용할 와이파이의 정보를 알려주세요
@@ -230,6 +280,18 @@ const DeviceNetwork = styled.span`
   font-size: 12px;
   opacity: 0.8;
   font-weight: 400;
+`;
+
+const ConnectionStatus = styled.div<{ connected: boolean }>`
+  background: ${(props) => (props.connected ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 193, 7, 0.2)')};
+  color: ${(props) => (props.connected ? '#4CAF50' : '#FF9800')};
+  border: 1px solid ${(props) => (props.connected ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 193, 7, 0.3)')};
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-align: center;
 `;
 
 const ErrorMessage = styled.div`
