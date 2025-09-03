@@ -2,48 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BottomNavigation } from '../../components/BottomNavigation';
-import { authAPI, type DashboardResponse } from '../../services';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<DashboardResponse['data']['dashboard'] | null>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const checkDeviceAndFetchDashboard = async () => {
-      try {
-        // 먼저 사용자의 기기 상태를 확인
-        // 임시로 기본 device_id 사용 (실제로는 사용자의 device_id를 가져와야 함)
-        const deviceId = localStorage.getItem('USER_DEVICE_ID') || 'default';
-        
-        try {
-          const deviceResponse = await authAPI.getDeviceStatus(deviceId);
-          if (!deviceResponse.success || !deviceResponse.data.is_setup_complete) {
-            console.error('Device not found or setup incomplete');
-            navigate('/device-register', { replace: true });
-            return;
+    // 더미 데이터로 홈 화면 채우기
+    const loadDummyData = () => {
+      const dummyData = {
+        upcoming_alarms: [
+          {
+            id: "1",
+            alarm_time: "07:30",
+            label: "출근 준비",
+            is_enabled: true,
+            smart_wake: true,
+            days: ["mon", "tue", "wed", "thu", "fri"]
           }
-        } catch (deviceError: any) {
-          console.error('Device status check failed:', deviceError);
-          navigate('/device-register', { replace: true });
-          return;
+        ],
+        sleep_summary: {
+          last_night_score: 85,
+          last_night_quality: "좋음",
+          last_night_duration: 7.5,
+          consistency_score: 78,
+          week_average: 82,
+          month_average: 79
+        },
+        quick_stats: {
+          total_nights_tracked: 45,
+          average_sleep_duration: 7.2,
+          best_sleep_score: 96,
+          consistency_streak: 12,
+          sleep_efficiency: 88
         }
-
-        // 기기가 있으면 대시보드 데이터 로드
-        const response = await authAPI.getDashboard();
-        if (response.success) {
-          setDashboardData(response.data.dashboard);
-        }
-      } catch (error: any) {
-        setError(error.response?.data?.message || '데이터를 불러오는데 실패했습니다.');
-        console.error('Dashboard fetch error:', error);
-      } finally {
-        setLoading(false);
-      }
+      };
+      
+      setDashboardData(dummyData);
+      setLoading(false);
     };
 
-    checkDeviceAndFetchDashboard();
+    // 실제 로딩 시간을 시뮬레이션
+    setTimeout(() => {
+      loadDummyData();
+    }, 1000);
   }, [navigate]);
 
   const handleSleepScoreClick = () => {

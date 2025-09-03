@@ -3,6 +3,7 @@ import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { provisioningAPI } from "../../services";
+import imageUrl from "../../assets/image.png";
 
 const DeviceRegister = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const DeviceRegister = () => {
 
         <DeviceImageContainer>
           <DeviceImage
-            src="/src/assets/image.png"
+            src={imageUrl}
             alt="베개프로 초기화 화면"
           />
         </DeviceImageContainer>

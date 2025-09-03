@@ -159,14 +159,18 @@ const WifiSetup = () => {
         return;
       }
 
-      // WiFi 정보를 localStorage에 저장하고 다음 페이지로
+      // WiFi 정보를 localStorage에 저장
       localStorage.setItem('USER_WIFI_CREDENTIALS', JSON.stringify({
         ssid: wifiData.ssid,
         password: wifiData.password
       }));
 
-      androidBridge.logToConsole('info', '[WifiSetup] WiFi configuration successful, navigating to device-connecting', 'WifiSetup');
-      navigate("/device-connecting");
+      androidBridge.logToConsole('info', '[WifiSetup] WiFi configuration successful, waiting 5 seconds then navigating to device-connecting', 'WifiSetup');
+      
+      // 5초 후 페이지 이동
+      setTimeout(() => {
+        navigate("/device-connecting");
+      }, 5000);
       
     } catch (error: any) {
       androidBridge.logToConsole('error', `[WifiSetup] handleNext error: ${error}`, 'WifiSetup');

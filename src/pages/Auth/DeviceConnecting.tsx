@@ -44,7 +44,7 @@ const DeviceConnecting = () => {
               localStorage.setItem('CONNECTED_DEVICE_ID', response.data.device_id);
             }
             
-            // 2초 후 다음 페이지로 이동
+            // 2초 후 기기 위치 설정 페이지로 이동
             setTimeout(() => {
               navigate("/device-location");
             }, 2000);
