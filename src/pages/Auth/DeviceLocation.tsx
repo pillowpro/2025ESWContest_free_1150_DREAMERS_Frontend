@@ -71,11 +71,10 @@ const DeviceLocation = () => {
         return;
       }
 
-      const response = await provisioningAPI.completeSetup({
+      const response = await provisioningAPI.setLocation({
         device_id: deviceId,
-        device_name: deviceName.trim(),
-        location_city: selectedLocation,
-        timezone: 'Asia/Seoul'
+        latitude: 37.5665,
+        longitude: 126.9780
       });
 
       if (response.success) {

@@ -60,14 +60,12 @@ const DeviceConnecting = () => {
         attempts++;
         setStatusText(`등록 상태 확인 중... (${attempts}/${maxAttempts})`);
 
-        const response = await provisioningAPI.checkStatus({
-          provisioning_code: provisioningCode
-        });
+        const response = await provisioningAPI.checkStatus(provisioningCode);
 
         if (response.success) {
           const status = response.data.status;
           
-          if (status === 'connected' || status === 'completed') {
+          if (status === 'completed') {
             setStatusText('등록 완료!');
             setIsComplete(true);
             
