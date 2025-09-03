@@ -3,7 +3,6 @@ import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AndroidBridge } from "../../services";
-// import { filterBaeGaeProNetworks, extractDeviceIdFromSSID } from "../../services"; // 임시 주석
 
 interface BaeGaeProNetwork {
   ssid: string;
@@ -50,21 +49,31 @@ const DeviceSearching = () => {
         console.log('[DeviceSearching] Total networks found:', response.data.networks.length);
         console.log('[DeviceSearching] All networks:', response.data.networks);
         
-        // 디버깅을 위해 임시로 모든 네트워크 표시
-        const allNetworks = response.data.networks;
-        console.log('[DeviceSearching] Showing ALL networks for debugging');
+        // 빈 SSID 제거 및 BaeGaePRO 네트워크만 필터링
+        const filteredNetworks = response.data.networks.filter(network => {
+          // 빈 SSID 제거
+          if (!network.ssid || network.ssid.trim() === '') {
+            console.log('[DeviceSearching] Skipping empty SSID network:', network.bssid);
+            return false;
+          }
+          
+          // BaeGaePRO로 시작하는 네트워크만 선택
+          const isBaeGaePro = network.ssid.startsWith('BaeGaePRO');
+          if (!isBaeGaePro) {
+            console.log('[DeviceSearching] Skipping non-BaeGaePRO network:', network.ssid);
+          }
+          return isBaeGaePro;
+        });
         
-        // 원래 코드 (나중에 복구)
-        // const baeGaeProNetworks = filterBaeGaeProNetworks(response.data.networks);
-        const baeGaeProNetworks = allNetworks; // 임시: 모든 네트워크 표시
+        console.log('[DeviceSearching] BaeGaePRO networks found:', filteredNetworks.length);
+        console.log('[DeviceSearching] BaeGaePRO networks detail:', filteredNetworks);
         
-        console.log('[DeviceSearching] Networks to display:', baeGaeProNetworks.length);
-        console.log('[DeviceSearching] Networks detail:', baeGaeProNetworks);
-        
-        const formattedNetworks: BaeGaeProNetwork[] = baeGaeProNetworks.map((network, index) => {
+        const formattedNetworks: BaeGaeProNetwork[] = filteredNetworks.map((network, index) => {
+          // BaeGaePRO-XXXX 형식에서 XXXX 추출
+          const deviceId = network.ssid.replace('BaeGaePRO-', '').replace('BaeGaePRO_', '');
           const formatted = {
             ssid: network.ssid,
-            deviceId: network.ssid || 'Unknown', // 임시: SSID를 그대로 표시
+            deviceId: deviceId,
             signal: getSignalStrength(network.rssi),
             rssi: network.rssi
           };
@@ -103,15 +112,14 @@ const DeviceSearching = () => {
     // 컴포넌트 마운트 시 WiFi 스캔 시작
     scanForBaeGaeProNetworks();
 
-    // 15초 후 재스캔 (BaeGaePro 네트워크를 찾지 못한 경우)
-    const rescanTimer = setTimeout(() => {
-      if (baeGaeProNetworks.length === 0) {
-        scanForBaeGaeProNetworks();
-      }
-    }, 15000);
+    // 5초마다 자동 새로고침
+    const intervalId = setInterval(() => {
+      console.log('[DeviceSearching] Auto-refreshing WiFi scan...');
+      scanForBaeGaeProNetworks();
+    }, 5000); // 5초마다 스캔
 
     return () => {
-      clearTimeout(rescanTimer);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -147,7 +155,11 @@ const DeviceSearching = () => {
               </SearchAnimation>
             </SearchContainer>
 
-            <Description>주변의 베개프로 기기를 찾고 있습니다</Description>
+            <Description>
+              주변의 베개프로 기기를 찾고 있습니다
+              <br />
+              <RefreshText>5초마다 자동 새로고침</RefreshText>
+            </Description>
           </>
         ) : (
           <>
@@ -162,7 +174,7 @@ const DeviceSearching = () => {
                       onClick={() => handleWifiSelect(network)}
                     >
                       <WifiInfo>
-                        <WifiName>{network.ssid}</WifiName>
+                        <WifiName>베개프로 {network.deviceId}</WifiName>
                         <WifiSignal>신호 강도: {network.signal} ({network.rssi} dBm)</WifiSignal>
                       </WifiInfo>
                       <img src="https://skrr.zerotravel.kr/uploads/97957be0-5859-4fbd-8b28-e34205004c42-wifi_icon.svg" />
@@ -334,6 +346,13 @@ const Description = styled.div`
   font-size: 16px;
   color: white;
   line-height: 1.5;
+`;
+
+const RefreshText = styled.span`
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 8px;
+  display: inline-block;
 `;
 
 const SubmitSection = styled.div`
