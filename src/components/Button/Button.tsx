@@ -1,4 +1,7 @@
 import styled from "styled-components";
+import { AndroidBridge } from "../../services";
+
+const androidBridge = new AndroidBridge();
 
 interface Prop {
   text: string;
@@ -8,24 +11,19 @@ interface Prop {
 
 const Button = ({ text, onClick, disabled = false }: Prop) => {
   const handleClick = (e: React.MouseEvent) => {
-    console.log('[Button] Click event triggered:', {
-      text,
-      disabled,
-      hasOnClick: !!onClick,
-      eventType: e.type
-    });
+    androidBridge.logToConsole('info', `[Button] Click event - text: ${text}, disabled: ${disabled}, hasOnClick: ${!!onClick}, eventType: ${e.type}`, 'Button');
     
     if (disabled) {
-      console.log('[Button] Click ignored - button is disabled');
+      androidBridge.logToConsole('warn', `[Button] Click ignored - button "${text}" is disabled`, 'Button');
       return;
     }
     
     if (!onClick) {
-      console.log('[Button] Click ignored - no onClick handler');
+      androidBridge.logToConsole('warn', `[Button] Click ignored - no onClick handler for "${text}"`, 'Button');
       return;
     }
     
-    console.log('[Button] Executing onClick for:', text);
+    androidBridge.logToConsole('info', `[Button] Executing onClick for: ${text}`, 'Button');
     onClick();
   };
 
@@ -52,12 +50,21 @@ const ButtonContainer = styled.button<{ disabled?: boolean }>`
   transition: all 0.2s ease;
 
   &:active {
-    background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#2a7ba8")};
-    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
+    background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#1e5f82")} !important;
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.95)")} !important;
+    box-shadow: ${(props) => (props.disabled ? "none" : "inset 0 2px 4px rgba(0,0,0,0.3)")} !important;
   }
 
   &:hover {
     background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#2a7ba8")};
+  }
+
+  /* 터치 디바이스용 추가 스타일 */
+  @media (hover: none) and (pointer: coarse) {
+    &:active {
+      background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#1e5f82")} !important;
+      transform: ${(props) => (props.disabled ? "none" : "scale(0.95)")} !important;
+    }
   }
 `;
 

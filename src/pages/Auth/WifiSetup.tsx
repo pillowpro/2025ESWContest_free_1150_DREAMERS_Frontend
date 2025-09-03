@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AndroidBridge, generateWiFiPassword } from "../../services";
 
+// AndroidBridge 인스턴스 생성
+const androidBridge = new AndroidBridge();
+
 interface SelectedNetwork {
   ssid: string;
   deviceId: string;
@@ -24,35 +27,34 @@ const WifiSetup = () => {
 
   useEffect(() => {
     // localStorage에서 선택된 네트워크 정보 가져오기
-    console.log('[WifiSetup] Loading selected network from localStorage...');
+    androidBridge.logToConsole('info', '[WifiSetup] Loading selected network from localStorage...', 'WifiSetup');
     const networkData = localStorage.getItem('SELECTED_DEVICE_NETWORK');
-    console.log('[WifiSetup] Network data from localStorage:', networkData);
+    androidBridge.logToConsole('info', `[WifiSetup] Network data: ${networkData}`, 'WifiSetup');
     
     if (networkData) {
       try {
         const network: SelectedNetwork = JSON.parse(networkData);
-        console.log('[WifiSetup] Parsed network:', network);
+        androidBridge.logToConsole('info', `[WifiSetup] Parsed network: ${JSON.stringify(network)}`, 'WifiSetup');
         setSelectedNetwork(network);
       } catch (error) {
-        console.error('[WifiSetup] Failed to parse network data:', error);
+        androidBridge.logToConsole('error', `[WifiSetup] Failed to parse network data: ${error}`, 'WifiSetup');
         navigate('/device-searching');
       }
     } else {
-      console.warn('[WifiSetup] No selected network found, redirecting to device searching');
-      // 선택된 네트워크가 없으면 이전 페이지로
+      androidBridge.logToConsole('warn', '[WifiSetup] No selected network found, redirecting', 'WifiSetup');
       navigate('/device-searching');
     }
   }, [navigate]);
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log(`[WifiSetup] Input change - ${field}:`, value);
+    androidBridge.logToConsole('info', `[WifiSetup] Input change - ${field}: ${value}`, 'WifiSetup');
     setWifiData(prev => {
       const newData = {
         ...prev,
         [field]: value
       };
-      console.log('[WifiSetup] New wifiData:', newData);
+      androidBridge.logToConsole('info', `[WifiSetup] New wifiData: ${JSON.stringify(newData)}`, 'WifiSetup');
       return newData;
     });
     if (error) setError('');
@@ -135,13 +137,7 @@ const WifiSetup = () => {
   const isFormValid = wifiData.ssid.trim() !== '' && wifiData.password.trim() !== '';
   
   // 디버깅을 위한 실시간 로그
-  console.log('[WifiSetup] Current state:', {
-    ssid: wifiData.ssid,
-    password: wifiData.password ? 'HAS_PASSWORD' : 'NO_PASSWORD',
-    selectedNetwork,
-    isConnecting,
-    isFormValid
-  });
+  androidBridge.logToConsole('info', `[WifiSetup] Current state - ssid: ${wifiData.ssid}, password: ${wifiData.password ? 'HAS_PASSWORD' : 'NO_PASSWORD'}, isConnecting: ${isConnecting}, isFormValid: ${isFormValid}`, 'WifiSetup');
 
   return (
     <Container>
@@ -193,15 +189,8 @@ const WifiSetup = () => {
         <Button 
           text={isConnecting ? "연결 중..." : "다음"} 
           onClick={() => {
-            console.log('[WifiSetup] Button clicked!');
-            console.log('[WifiSetup] Button state at click:', {
-              isFormValid,
-              isConnecting,
-              disabled: !isFormValid || isConnecting,
-              ssid: wifiData.ssid,
-              password: wifiData.password ? 'HAS_PASSWORD' : 'NO_PASSWORD',
-              selectedNetwork: !!selectedNetwork
-            });
+            androidBridge.logToConsole('info', '[WifiSetup] Button clicked!', 'WifiSetup');
+            androidBridge.logToConsole('info', `[WifiSetup] Button state - isFormValid: ${isFormValid}, isConnecting: ${isConnecting}, disabled: ${!isFormValid || isConnecting}, ssid: ${wifiData.ssid}, hasPassword: ${!!wifiData.password}, hasSelectedNetwork: ${!!selectedNetwork}`, 'WifiSetup');
             handleNext();
           }} 
           disabled={!isFormValid || isConnecting}
