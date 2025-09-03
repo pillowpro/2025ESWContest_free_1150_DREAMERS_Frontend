@@ -11,6 +11,9 @@ interface Prop {
 
 const Button = ({ text, onClick, disabled = false }: Prop) => {
   const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     androidBridge.logToConsole('info', `[Button] Click event - text: ${text}, disabled: ${disabled}, hasOnClick: ${!!onClick}, eventType: ${e.type}`, 'Button');
     
     if (disabled) {
@@ -24,13 +27,30 @@ const Button = ({ text, onClick, disabled = false }: Prop) => {
     }
     
     androidBridge.logToConsole('info', `[Button] Executing onClick for: ${text}`, 'Button');
-    onClick();
+    try {
+      onClick();
+      androidBridge.logToConsole('info', `[Button] onClick executed successfully for: ${text}`, 'Button');
+    } catch (error) {
+      androidBridge.logToConsole('error', `[Button] onClick failed for ${text}: ${error}`, 'Button');
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    androidBridge.logToConsole('info', `[Button] TouchStart event - text: ${text}`, 'Button');
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    androidBridge.logToConsole('info', `[Button] TouchEnd event - text: ${text}`, 'Button');
+    handleClick(e as any);
   };
 
   return (
     <ButtonContainer
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       disabled={disabled}
+      style={{ pointerEvents: 'auto', touchAction: 'manipulation' }}
     >
       {text}
     </ButtonContainer>
@@ -48,6 +68,10 @@ const ButtonContainer = styled.button<{ disabled?: boolean }>`
   border: none;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 9999;
+  pointer-events: auto;
+  touch-action: manipulation;
 
   &:active {
     background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#1e5f82")} !important;

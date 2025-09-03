@@ -193,8 +193,18 @@ const WifiSetup = () => {
             androidBridge.logToConsole('info', `[WifiSetup] Button state - isFormValid: ${isFormValid}, isConnecting: ${isConnecting}, disabled: ${!isFormValid || isConnecting}, ssid: ${wifiData.ssid}, hasPassword: ${!!wifiData.password}, hasSelectedNetwork: ${!!selectedNetwork}`, 'WifiSetup');
             handleNext();
           }} 
-          disabled={!isFormValid || isConnecting}
+          disabled={false}
         />
+        
+        {/* 응급 처치 버튼 */}
+        <EmergencyButton 
+          onClick={() => {
+            androidBridge.logToConsole('info', '[WifiSetup] Emergency button clicked!', 'WifiSetup');
+            handleNext();
+          }}
+        >
+          응급 다음 버튼 (임시)
+        </EmergencyButton>
       </SubmitSection>
     </Container>
   );
@@ -317,6 +327,28 @@ const Container = styled.div`
   overflow-x: hidden;
   padding-bottom: 20px;
   margin: 0 auto;
+`;
+
+const EmergencyButton = styled.button`
+  width: 100%;
+  height: 48px;
+  background-color: #ff4444;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  z-index: 10000;
+  position: relative;
+  pointer-events: auto;
+  touch-action: manipulation;
+  
+  &:active {
+    background-color: #cc3333 !important;
+    transform: scale(0.95) !important;
+  }
 `;
 
 export default WifiSetup;
