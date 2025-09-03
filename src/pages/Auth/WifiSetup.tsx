@@ -63,7 +63,16 @@ const WifiSetup = () => {
   };
 
   const handleNext = async () => {
+    console.log('handleNext called', {
+      ssid: wifiData.ssid,
+      password: wifiData.password ? '***' : '',
+      selectedNetwork,
+      isConnecting,
+      isFormValid
+    });
+
     if (!wifiData.ssid || !wifiData.password || !selectedNetwork || isConnecting) {
+      console.log('Form validation failed');
       return;
     }
 

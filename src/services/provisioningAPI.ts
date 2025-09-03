@@ -18,36 +18,24 @@ export interface ProvisioningResponse {
   };
 }
 
-export interface ProvisioningStatusRequest {
-  provisioning_code: string;
-}
 
 export interface ProvisioningStatusResponse {
   success: true;
   data: {
-    status: 'pending' | 'connected' | 'completed' | 'expired' | 'failed';
-    device_id?: string;
-    message: string;
-    requires_setup?: boolean;
+    status: 'completed';
+    device_id: string;
   };
 }
 
-export interface DeviceCompleteRequest {
+export interface DeviceLocationRequest {
   device_id: string;
-  device_name: string;
-  location_city: string;
-  timezone: string;
+  latitude: number;
+  longitude: number;
 }
 
-export interface DeviceCompleteResponse {
+export interface DeviceLocationResponse {
   success: true;
   message: string;
-  data: {
-    device_id: string;
-    device_name: string;
-    status: string;
-    is_completed: boolean;
-  };
 }
 
 export interface DeviceProvisionData {
@@ -65,23 +53,23 @@ export const provisioningAPI = {
    * 프로비저닝 코드 요청
    */
   requestProvisioningCode: async (data: ProvisioningRequest): Promise<ProvisioningResponse> => {
-    const response = await privateAPI.post('/api/v1/provisioning/request', data);
+    const response = await privateAPI.post('/api/v1/devices/provisioning/request', data);
     return response.data;
   },
 
   /**
-   * 등록 상태 확인 (폴링용)
+   * 프로비저닝 상태 확인
    */
-  checkStatus: async (data: ProvisioningStatusRequest): Promise<ProvisioningStatusResponse> => {
-    const response = await privateAPI.post('/api/v1/provisioning/status', data);
+  checkStatus: async (provisioning_code: string): Promise<ProvisioningStatusResponse> => {
+    const response = await privateAPI.get(`/api/v1/devices/provisioning/status/${provisioning_code}`);
     return response.data;
   },
 
   /**
-   * 기기 설정 완료
+   * 기기 위치 설정
    */
-  completeSetup: async (data: DeviceCompleteRequest): Promise<DeviceCompleteResponse> => {
-    const response = await privateAPI.post('/api/v1/provisioning/complete', data);
+  setLocation: async (data: DeviceLocationRequest): Promise<DeviceLocationResponse> => {
+    const response = await privateAPI.post('/api/v1/devices/location', data);
     return response.data;
   },
 

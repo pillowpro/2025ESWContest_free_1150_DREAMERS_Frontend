@@ -7,9 +7,16 @@ interface Prop {
 }
 
 const Button = ({ text, onClick, disabled = false }: Prop) => {
+  const handleClick = () => {
+    if (!disabled && onClick) {
+      console.log('Button clicked:', text);
+      onClick();
+    }
+  };
+
   return (
     <ButtonContainer
-      onClick={!disabled ? onClick : undefined}
+      onClick={handleClick}
       disabled={disabled}
     >
       {text}
@@ -30,7 +37,12 @@ const ButtonContainer = styled.button<{ disabled?: boolean }>`
   transition: all 0.2s ease;
 
   &:active {
-    background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#3594CE")};
+    background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#2a7ba8")};
+    transform: ${(props) => (props.disabled ? "none" : "scale(0.98)")};
+  }
+
+  &:hover {
+    background-color: ${(props) => (props.disabled ? "#d1d1d1" : "#2a7ba8")};
   }
 `;
 
