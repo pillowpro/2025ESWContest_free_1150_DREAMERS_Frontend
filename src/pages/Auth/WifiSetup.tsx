@@ -141,43 +141,30 @@ const WifiSetup = () => {
       return;
     }
 
-    if (!isBaeGaeProConnected) {
-      androidBridge.logToConsole('warn', '[WifiSetup] Cannot configure - not connected to BaeGaePRO WiFi', 'WifiSetup');
-      setError('먼저 베개프로 기기에 연결해야 합니다. 페이지를 새로고침해주세요.');
-      return;
-    }
-
     setIsConnecting(true);
     setError('');
 
+    // WiFi 정보를 localStorage에 저장
+    localStorage.setItem('USER_WIFI_CREDENTIALS', JSON.stringify({
+      ssid: wifiData.ssid,
+      password: wifiData.password
+    }));
+
+    androidBridge.logToConsole('info', '[WifiSetup] Starting process, will navigate after 5 seconds regardless of result', 'WifiSetup');
+
+    // 백그라운드에서 ESP32 설정 시도 (성공/실패 상관없이)
     try {
-      // ESP32에 WiFi 설정 전송 (SSID, 비밀번호, 프로비저닝 코드)
-      const configurationSuccess = await configureESP32WiFi();
-      
-      if (!configurationSuccess) {
-        setError('베개프로 기기 설정에 실패했습니다. 기기가 켜져있고 연결되어 있는지 확인해주세요.');
-        return;
-      }
-
-      // WiFi 정보를 localStorage에 저장
-      localStorage.setItem('USER_WIFI_CREDENTIALS', JSON.stringify({
-        ssid: wifiData.ssid,
-        password: wifiData.password
-      }));
-
-      androidBridge.logToConsole('info', '[WifiSetup] WiFi configuration successful, waiting 5 seconds then navigating to device-connecting', 'WifiSetup');
-      
-      // 5초 후 페이지 이동
-      setTimeout(() => {
-        navigate("/device-connecting");
-      }, 5000);
-      
+      await configureESP32WiFi();
+      androidBridge.logToConsole('info', '[WifiSetup] ESP32 configuration completed', 'WifiSetup');
     } catch (error: any) {
-      androidBridge.logToConsole('error', `[WifiSetup] handleNext error: ${error}`, 'WifiSetup');
-      setError('연결 중 오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsConnecting(false);
+      androidBridge.logToConsole('warn', `[WifiSetup] ESP32 configuration failed but continuing: ${error}`, 'WifiSetup');
     }
+
+    // 무조건 5초 후 다음 페이지로 이동
+    setTimeout(() => {
+      androidBridge.logToConsole('info', '[WifiSetup] 5 seconds elapsed, navigating to device-connecting', 'WifiSetup');
+      navigate("/device-connecting");
+    }, 5000);
   };
 
   const isFormValid = wifiData.ssid.trim() !== '' && wifiData.password.trim() !== '';
