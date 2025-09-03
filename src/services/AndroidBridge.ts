@@ -33,6 +33,7 @@ declare global {
       scanWiFi(): string;
       connectToWiFi(ssid: string, password: string): string;
       connectToWiFiAsSecondary(ssid: string, password: string): string;
+      configureESP32WiFi(ssid: string, password: string, provisioningCode: string): string;
       vibrateOnce(duration: number, fadeInOut: boolean): string;
       vibrate(pattern: string, fadeInOut: boolean): string;
       stopVibration(): string;
@@ -216,6 +217,33 @@ class AndroidBridge {
       return this.parseAndroidResponse<AndroidResponse>(result);
     } catch (error) {
       throw new Error(`Secondary WiFi connection failed: ${error}`);
+    }
+  }
+
+  async configureESP32WiFi(ssid: string, password: string, provisioningCode: string): Promise<AndroidResponse> {
+    this.checkAndroidAvailability();
+    
+    if (!ssid.trim()) {
+      throw new Error('SSID is required');
+    }
+    
+    if (!password.trim()) {
+      throw new Error('Password is required');
+    }
+    
+    if (!provisioningCode.trim()) {
+      throw new Error('Provisioning code is required');
+    }
+
+    try {
+      await this.logToConsole('info', `[AndroidBridge] Configuring ESP32 WiFi - SSID: ${ssid}, Provisioning: ${provisioningCode}`, 'AndroidBridge');
+      const result = window.Android.configureESP32WiFi(ssid, password, provisioningCode);
+      const response = this.parseAndroidResponse<AndroidResponse>(result);
+      await this.logToConsole('info', `[AndroidBridge] ESP32 WiFi configuration result: ${JSON.stringify(response)}`, 'AndroidBridge');
+      return response;
+    } catch (error) {
+      await this.logToConsole('error', `[AndroidBridge] ESP32 WiFi configuration failed: ${error}`, 'AndroidBridge');
+      throw new Error(`ESP32 WiFi configuration failed: ${error}`);
     }
   }
 
@@ -409,6 +437,11 @@ export const AndroidAPI = {
 
   createBridge(baseURL?: string): AndroidBridge {
     return new AndroidBridge(baseURL);
+  },
+
+  async configureESP32WiFi(ssid: string, password: string, provisioningCode: string): Promise<AndroidResponse> {
+    const bridge = new AndroidBridge();
+    return await bridge.configureESP32WiFi(ssid, password, provisioningCode);
   }
 };
 

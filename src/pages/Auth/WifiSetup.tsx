@@ -3,7 +3,7 @@ import Input from "../../components/Input/Input";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { AndroidBridge, generateWiFiPassword } from "../../services";
+import { AndroidBridge, AndroidAPI, generateWiFiPassword } from "../../services";
 
 // AndroidBridge 인스턴스 생성
 const androidBridge = new AndroidBridge();
@@ -60,30 +60,27 @@ const WifiSetup = () => {
     if (error) setError('');
   };
 
-  const connectToDeviceWiFi = async (): Promise<boolean> => {
-    if (!selectedNetwork) {
-      console.error('No selected network for device connection');
+  const configureESP32WiFi = async (): Promise<boolean> => {
+    const provisioningCode = localStorage.getItem('PROVISIONING_CODE');
+    
+    if (!provisioningCode) {
+      androidBridge.logToConsole('error', '[WifiSetup] No provisioning code found', 'WifiSetup');
       return false;
     }
 
     try {
-      const devicePassword = generateWiFiPassword(selectedNetwork.deviceId);
-      console.log('[WifiSetup] Connecting to device WiFi:', {
-        ssid: selectedNetwork.ssid,
-        deviceId: selectedNetwork.deviceId
-      });
+      androidBridge.logToConsole('info', `[WifiSetup] Configuring ESP32 WiFi - SSID: ${wifiData.ssid}`, 'WifiSetup');
       
-      const androidBridge = new AndroidBridge();
-      const response = await androidBridge.connectToWiFi({
-        ssid: selectedNetwork.ssid,
-        password: devicePassword,
-        isHidden: false
-      });
+      const response = await AndroidAPI.configureESP32WiFi(
+        wifiData.ssid,
+        wifiData.password,
+        provisioningCode
+      );
 
-      console.log('[WifiSetup] Device WiFi connection response:', response);
+      androidBridge.logToConsole('info', `[WifiSetup] ESP32 configuration result: ${JSON.stringify(response)}`, 'WifiSetup');
       return response.success;
     } catch (error) {
-      console.error('Device WiFi connection failed:', error);
+      androidBridge.logToConsole('error', `[WifiSetup] ESP32 configuration failed: ${error}`, 'WifiSetup');
       return false;
     }
   };
@@ -97,13 +94,8 @@ const WifiSetup = () => {
       isFormValid
     });
 
-    if (!wifiData.ssid || !wifiData.password || !selectedNetwork || isConnecting) {
-      console.log('Form validation failed:', {
-        ssid: !!wifiData.ssid,
-        password: !!wifiData.password,
-        selectedNetwork: !!selectedNetwork,
-        isConnecting
-      });
+    if (!wifiData.ssid || !wifiData.password || isConnecting) {
+      androidBridge.logToConsole('warn', `[WifiSetup] Form validation failed - ssid: ${!!wifiData.ssid}, password: ${!!wifiData.password}, isConnecting: ${isConnecting}`, 'WifiSetup');
       return;
     }
 
@@ -111,23 +103,25 @@ const WifiSetup = () => {
     setError('');
 
     try {
-      // 1. 베개프로 WiFi에 연결
-      const deviceConnected = await connectToDeviceWiFi();
+      // ESP32에 WiFi 설정 전송 (SSID, 비밀번호, 프로비저닝 코드)
+      const configurationSuccess = await configureESP32WiFi();
       
-      if (!deviceConnected) {
-        setError('베개프로 기기에 연결할 수 없습니다. 기기가 켜져있는지 확인해주세요.');
+      if (!configurationSuccess) {
+        setError('베개프로 기기 설정에 실패했습니다. 기기가 켜져있고 연결되어 있는지 확인해주세요.');
         return;
       }
 
-      // 2. WiFi 정보를 localStorage에 저장하고 다음 페이지로
+      // WiFi 정보를 localStorage에 저장하고 다음 페이지로
       localStorage.setItem('USER_WIFI_CREDENTIALS', JSON.stringify({
         ssid: wifiData.ssid,
         password: wifiData.password
       }));
 
+      androidBridge.logToConsole('info', '[WifiSetup] WiFi configuration successful, navigating to device-connecting', 'WifiSetup');
       navigate("/device-connecting");
       
     } catch (error: any) {
+      androidBridge.logToConsole('error', `[WifiSetup] handleNext error: ${error}`, 'WifiSetup');
       setError('연결 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsConnecting(false);
@@ -193,18 +187,8 @@ const WifiSetup = () => {
             androidBridge.logToConsole('info', `[WifiSetup] Button state - isFormValid: ${isFormValid}, isConnecting: ${isConnecting}, disabled: ${!isFormValid || isConnecting}, ssid: ${wifiData.ssid}, hasPassword: ${!!wifiData.password}, hasSelectedNetwork: ${!!selectedNetwork}`, 'WifiSetup');
             handleNext();
           }} 
-          disabled={false}
+          disabled={!isFormValid || isConnecting}
         />
-        
-        {/* 응급 처치 버튼 */}
-        <EmergencyButton 
-          onClick={() => {
-            androidBridge.logToConsole('info', '[WifiSetup] Emergency button clicked!', 'WifiSetup');
-            handleNext();
-          }}
-        >
-          응급 다음 버튼 (임시)
-        </EmergencyButton>
       </SubmitSection>
     </Container>
   );
@@ -327,28 +311,6 @@ const Container = styled.div`
   overflow-x: hidden;
   padding-bottom: 20px;
   margin: 0 auto;
-`;
-
-const EmergencyButton = styled.button`
-  width: 100%;
-  height: 48px;
-  background-color: #ff4444;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: bold;
-  color: white;
-  border: none;
-  cursor: pointer;
-  margin-top: 10px;
-  z-index: 10000;
-  position: relative;
-  pointer-events: auto;
-  touch-action: manipulation;
-  
-  &:active {
-    background-color: #cc3333 !important;
-    transform: scale(0.95) !important;
-  }
 `;
 
 export default WifiSetup;
