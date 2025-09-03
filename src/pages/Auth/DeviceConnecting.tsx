@@ -16,37 +16,7 @@ const DeviceConnecting = () => {
   const [error, setError] = useState('');
   const [pollingTimeout, setPollingTimeout] = useState<number | null>(null);
 
-  const sendProvisioningDataToDevice = async () => {
-    try {
-      // localStorage에서 필요한 데이터 가져오기
-      const provisioningCode = localStorage.getItem('PROVISIONING_CODE');
-      const wifiCredentialsStr = localStorage.getItem('USER_WIFI_CREDENTIALS');
-      
-      if (!provisioningCode || !wifiCredentialsStr) {
-        setError('필요한 정보가 없습니다. 처음부터 다시 시도해주세요.');
-        return false;
-      }
-
-      const wifiCredentials: UserWiFiCredentials = JSON.parse(wifiCredentialsStr);
-      
-      setStatusText('기기에 설정 정보 전송 중...');
-
-      // ESP32 기기(192.168.4.1)에 프로비저닝 데이터 전송
-      const deviceResponse = await provisioningAPI.sendProvisioningDataToDevice({
-        provisioning_token: provisioningCode,
-        wifi_ssid: wifiCredentials.ssid,
-        wifi_password: wifiCredentials.password,
-        server_url: 'https://pillow.ijw.app'
-      });
-
-      console.log('Device response:', deviceResponse);
-      return true;
-    } catch (error: any) {
-      console.error('Failed to send provisioning data:', error);
-      setError('기기 설정에 실패했습니다. 기기가 연결되어 있는지 확인해주세요.');
-      return false;
-    }
-  };
+  // ESP32 설정은 WifiSetup에서 이미 완료되었으므로 제거
 
   const pollRegistrationStatus = () => {
     const provisioningCode = localStorage.getItem('PROVISIONING_CODE');
@@ -116,18 +86,9 @@ const DeviceConnecting = () => {
   };
 
   useEffect(() => {
-    const initializeProvisioning = async () => {
-      // 1. 기기에 프로비저닝 데이터 전송
-      const success = await sendProvisioningDataToDevice();
-      
-      if (success) {
-        // 2. 성공하면 서버 폴링 시작
-        setStatusText('서버 등록 대기 중...');
-        pollRegistrationStatus();
-      }
-    };
-
-    initializeProvisioning();
+    // ESP32 설정은 WifiSetup에서 이미 완료되었으므로 바로 서버 폴링 시작
+    setStatusText('서버 등록 대기 중...');
+    pollRegistrationStatus();
 
     // 컴포넌트 언마운트 시 타이머 정리
     return () => {

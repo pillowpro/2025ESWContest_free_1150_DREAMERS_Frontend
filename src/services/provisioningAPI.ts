@@ -73,30 +73,7 @@ export const provisioningAPI = {
     return response.data;
   },
 
-  /**
-   * 기기로 프로비저닝 데이터 전송 (로컬 192.168.4.1)
-   */
-  sendProvisioningDataToDevice: async (data: DeviceProvisionData): Promise<any> => {
-    try {
-      const response = await fetch('http://192.168.4.1/provision', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-        signal: AbortSignal.timeout(10000), // 10초 타임아웃
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Device communication failed: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Failed to send provisioning data to device:', error);
-      throw error;
-    }
-  },
+
 };
 
 /**
